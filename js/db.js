@@ -44,6 +44,7 @@ function defaultConfig() {
     initialsMaxLength: 3,
     idleResetSeconds: 60,
     pinHash: null,
+    sheetWebAppUrl: null,
   };
 }
 
@@ -76,8 +77,9 @@ async function addSubmission(sub) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_SUBMISSIONS, 'readwrite');
-    tx.objectStore(STORE_SUBMISSIONS).add(sub);
-    tx.oncomplete = () => resolve();
+    const req = tx.objectStore(STORE_SUBMISSIONS).add(sub);
+    req.onsuccess = () => { sub.id = req.result; };
+    tx.oncomplete = () => resolve(sub.id);
     tx.onerror = () => reject(tx.error);
   });
 }
@@ -99,6 +101,58 @@ async function clearSubmissions() {
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
+}
+
+async function markSubmissionSynced(id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_SUBMISSIONS, 'readwrite');
+    const store = tx.objectStore(STORE_SUBMISSIONS);
+    const req = store.get(id);
+    req.onsuccess = () => {
+      const rec = req.result;
+      if (rec) { rec.synced = true; store.put(rec); }
+    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// Sends one submission to the configured Google Sheet web app. Uses
+// text/plain as the content type so the browser skips the CORS preflight
+// that Apps Script web apps don't handle — the body is still JSON.
+async function syncSubmission(cfg, sub) {
+  if (!cfg.sheetWebAppUrl) return false;
+  try {
+    const payload = {
+      orderNumber: sub.orderNumber,
+      timestamp: sub.timestamp,
+      fields: cfg.fields.map((f) => ({ label: f.label, value: (sub.values && sub.values[f.id]) || '' })),
+      styleLabel: sub.fontOptionLabel,
+      initials: sub.initials,
+    };
+    const res = await fetch(cfg.sheetWebAppUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      await markSubmissionSynced(sub.id);
+      return true;
+    }
+  } catch (e) {
+    // Offline or unreachable — stays queued as unsynced and gets retried later.
+  }
+  return false;
+}
+
+async function retryPendingSyncs(cfg) {
+  if (!cfg.sheetWebAppUrl) return;
+  const subs = await getAllSubmissions();
+  const pending = subs.filter((s) => !s.synced);
+  for (const s of pending) {
+    await syncSubmission(cfg, s);
+  }
 }
 
 // Assigns the next order number (starting at 100) and advances the counter,
