@@ -82,6 +82,8 @@ function showAdminPanel() {
   wireConfigActions();
   loadSubmissions();
   wireSubmissionsActions();
+  retryPendingSyncs(config); // fire-and-forget: catches up any orders missed while offline
+  retryPendingDeletes(config); // fire-and-forget: catches up any deletes missed while offline
 }
 
 function wireTabs() {
@@ -374,6 +376,7 @@ function wireSubmissionsActions() {
     if (!config.sheetWebAppUrl) { toast('No Google Sheet URL configured.'); return; }
     toast('Retrying sync...');
     await retryPendingSyncs(config);
+    await retryPendingDeletes(config);
     loadSubmissions();
     toast('Sync retry complete.');
   });
