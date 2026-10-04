@@ -103,6 +103,30 @@ async function clearSubmissions() {
   });
 }
 
+async function deleteSubmissionLocal(id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_SUBMISSIONS, 'readwrite');
+    tx.objectStore(STORE_SUBMISSIONS).delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function syncDeleteSubmission(cfg, sub) {
+  if (!cfg.sheetWebAppUrl) return false;
+  try {
+    const res = await fetch(cfg.sheetWebAppUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ action: 'delete', orderNumber: sub.orderNumber }),
+    });
+    return res.ok;
+  } catch (e) {
+    return false;
+  }
+}
+
 async function markSubmissionSynced(id) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
