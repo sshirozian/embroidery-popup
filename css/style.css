@@ -268,8 +268,11 @@ h1 {
 
 .summary-row span { color: var(--muted); }
 
+.print-footer { display: none; }
+
 @page {
-  margin: 10mm;
+  size: 72mm auto;
+  margin: 2mm;
 }
 
 @media print {
@@ -280,15 +283,40 @@ h1 {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
+    width: 72mm;
+    max-width: 100%;
     padding: 0;
   }
+  /* Force plain black-on-white output so a thermal/receipt printer doesn't
+     try to render colored fills or accent text. */
+  .thankyou, .thankyou * {
+    color: #000 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
   .thankyou .big { display: none; }
-  .thankyou h1 { font-size: 18px; margin: 0 0 4px; }
-  .thankyou .subtitle { font-size: 12px; margin: 0 0 6px; }
-  .order-number { font-size: 44px; margin: 0 0 10px; }
-  .order-summary { padding: 6px 14px; margin: 0; }
-  .summary-row { font-size: 13px; padding: 5px 0; }
+  .thankyou h1 { font-size: 16px; margin: 0 0 4px; }
+  .thankyou .subtitle { font-size: 11px; margin: 0 0 6px; }
+  .order-number { font-size: 36px; margin: 0 0 8px; }
+  .order-summary {
+    padding: 4px 0;
+    margin: 0;
+    border-top: 1px dashed #000;
+    border-bottom: 1px dashed #000;
+  }
+  .summary-row {
+    font-size: 12px;
+    padding: 4px 0;
+    border-bottom: 1px dashed #000;
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .print-footer {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 10px;
+  }
 }
 
 .footer-link {
