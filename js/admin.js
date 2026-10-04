@@ -1,5 +1,4 @@
 let config = null;
-const AUTH_KEY = 'adminAuthed';
 
 function toast(msg) {
   const t = document.getElementById('toast');
@@ -19,11 +18,6 @@ async function initAuthGate() {
     return;
   }
 
-  if (sessionStorage.getItem(AUTH_KEY) === '1') {
-    showAdminPanel();
-    return;
-  }
-
   document.getElementById('pinEntryScreen').style.display = 'block';
   wirePinEntry();
 }
@@ -37,7 +31,6 @@ function wirePinSetup() {
     if (p1 !== p2) { err.textContent = 'PINs do not match.'; return; }
     config.pinHash = await sha256Hex(p1);
     await setConfig(config);
-    sessionStorage.setItem(AUTH_KEY, '1');
     document.getElementById('pinSetupScreen').style.display = 'none';
     showAdminPanel();
   });
@@ -51,7 +44,6 @@ function wirePinEntry() {
     const val = input.value.trim();
     const hash = await sha256Hex(val);
     if (hash === config.pinHash) {
-      sessionStorage.setItem(AUTH_KEY, '1');
       document.getElementById('pinEntryScreen').style.display = 'none';
       showAdminPanel();
     } else {
@@ -77,7 +69,6 @@ function wireChangePin() {
   });
 
   document.getElementById('lockBtn').addEventListener('click', () => {
-    sessionStorage.removeItem(AUTH_KEY);
     window.location.reload();
   });
 }
