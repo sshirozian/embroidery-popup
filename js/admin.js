@@ -309,6 +309,7 @@ function renderSubsTable(subs) {
     th.textContent = c.label;
     thead.appendChild(th);
   });
+  thead.appendChild(document.createElement('th'));
 
   subs.slice().reverse().forEach((s) => {
     const tr = document.createElement('tr');
@@ -322,6 +323,22 @@ function renderSubsTable(subs) {
       else td.textContent = (s.values && s.values[c.key]) || '';
       tr.appendChild(td);
     });
+
+    const actionTd = document.createElement('td');
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'icon-btn';
+    deleteBtn.textContent = '✕';
+    deleteBtn.title = 'Delete this order';
+    deleteBtn.addEventListener('click', async () => {
+      if (!confirm(`Delete order #${s.orderNumber}? This cannot be undone.`)) return;
+      await deleteSubmissionLocal(s.id);
+      syncDeleteSubmission(config, s); // fire-and-forget: removes the matching row from the Google Sheet too
+      loadSubmissions();
+      toast('Order deleted.');
+    });
+    actionTd.appendChild(deleteBtn);
+    tr.appendChild(actionTd);
+
     tbody.appendChild(tr);
   });
 }
