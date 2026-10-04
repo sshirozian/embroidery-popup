@@ -101,6 +101,24 @@ async function clearSubmissions() {
   });
 }
 
+// Assigns the next order number (starting at 100) and advances the counter,
+// in one transaction so concurrent calls can't hand out the same number.
+async function getNextOrderNumber() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_META, 'readwrite');
+    const store = tx.objectStore(STORE_META);
+    const req = store.get('orderCounter');
+    req.onsuccess = () => {
+      const current = req.result ? req.result.value : 100;
+      store.put({ key: 'orderCounter', value: current + 1 });
+    };
+    req.onerror = () => reject(req.error);
+    tx.oncomplete = () => resolve(req.result ? req.result.value : 100);
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 async function sha256Hex(text) {
   const enc = new TextEncoder().encode(text);
   const buf = await crypto.subtle.digest('SHA-256', enc);
