@@ -239,6 +239,14 @@ h1 {
   margin-bottom: 10px;
 }
 
+.order-number {
+  font-size: 96px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+  margin: 10px 0 30px;
+}
+
 .footer-link {
   margin-top: 28px;
   text-align: center;
