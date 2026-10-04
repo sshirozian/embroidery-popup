@@ -1,8 +1,0 @@
-{
-  "name": "Embroidery Pop-Up",
-  "short_name": "Embroidery",
-  "start_url": "index.html",
-  "display": "standalone",
-  "background_color": "#f4f2ee",
-  "theme_color": "#1f6f5c"
-}
