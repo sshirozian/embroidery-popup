@@ -167,9 +167,11 @@ async function submitOrder() {
     fieldLabels,
     fontOptionLabel: chosen ? chosen.label : '',
     initials: document.getElementById('initialsInput').value.trim().toUpperCase(),
+    synced: false,
   };
 
   await addSubmission(submission);
+  syncSubmission(config, submission); // fire-and-forget: never block the kiosk flow on network
   document.getElementById('orderNumberDisplay').textContent = orderNumber;
   renderOrderSummary(values.firstName || '', values.lastName || '', submission.fontOptionLabel, submission.initials);
   showStep(4);
@@ -237,6 +239,7 @@ async function init() {
   showStep(1);
   startIdleWatcher();
   requestWakeLock();
+  retryPendingSyncs(config); // fire-and-forget: catches up any orders missed while offline
 }
 
 init();
