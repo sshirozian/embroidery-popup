@@ -158,8 +158,10 @@ async function submitOrder() {
   const fieldLabels = {};
   config.fields.forEach((f) => { fieldLabels[f.id] = f.label; });
   const chosen = config.fontOptions.find((o) => o.id === selectedOptionId);
+  const orderNumber = await getNextOrderNumber();
 
   const submission = {
+    orderNumber,
     timestamp: new Date().toISOString(),
     values: { ...values },
     fieldLabels,
@@ -168,10 +170,14 @@ async function submitOrder() {
   };
 
   await addSubmission(submission);
+  document.getElementById('orderNumberDisplay').textContent = orderNumber;
   showStep(4);
-  setTimeout(() => {
+
+  const doneTimer = setTimeout(() => window.location.reload(), 30000);
+  document.getElementById('completeBtn').addEventListener('click', () => {
+    clearTimeout(doneTimer);
     window.location.reload();
-  }, 4500);
+  }, { once: true });
 }
 
 function wireNav() {
