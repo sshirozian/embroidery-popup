@@ -113,17 +113,83 @@ async function deleteSubmissionLocal(id) {
   });
 }
 
+// Deletes can't be retried from the submissions store (the record is gone
+// once deleted locally), so pending deletes are tracked separately until
+// the Sheet confirms the row is gone too.
+async function getPendingDeletes() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const req = db.transaction(STORE_META, 'readonly').objectStore(STORE_META).get('pendingDeletes');
+    req.onsuccess = () => resolve(req.result ? req.result.value : []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function addPendingDelete(orderNumber) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_META, 'readwrite');
+    const store = tx.objectStore(STORE_META);
+    const req = store.get('pendingDeletes');
+    req.onsuccess = () => {
+      const list = req.result ? req.result.value : [];
+      if (!list.includes(orderNumber)) list.push(orderNumber);
+      store.put({ key: 'pendingDeletes', value: list });
+    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function removePendingDelete(orderNumber) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_META, 'readwrite');
+    const store = tx.objectStore(STORE_META);
+    const req = store.get('pendingDeletes');
+    req.onsuccess = () => {
+      const list = (req.result ? req.result.value : []).filter((n) => n !== orderNumber);
+      store.put({ key: 'pendingDeletes', value: list });
+    };
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function sendDeleteRequest(cfg, orderNumber) {
+  const res = await fetch(cfg.sheetWebAppUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'delete', orderNumber }),
+  });
+  return res.ok;
+}
+
 async function syncDeleteSubmission(cfg, sub) {
   if (!cfg.sheetWebAppUrl) return false;
+  await addPendingDelete(sub.orderNumber);
   try {
-    const res = await fetch(cfg.sheetWebAppUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ action: 'delete', orderNumber: sub.orderNumber }),
-    });
-    return res.ok;
+    if (await sendDeleteRequest(cfg, sub.orderNumber)) {
+      await removePendingDelete(sub.orderNumber);
+      return true;
+    }
   } catch (e) {
-    return false;
+    // Offline or unreachable — stays queued in pendingDeletes and gets retried later.
+  }
+  return false;
+}
+
+async function retryPendingDeletes(cfg) {
+  if (!cfg.sheetWebAppUrl) return;
+  const pending = await getPendingDeletes();
+  for (const orderNumber of pending) {
+    try {
+      if (await sendDeleteRequest(cfg, orderNumber)) {
+        await removePendingDelete(orderNumber);
+      }
+    } catch (e) {
+      // Still offline — leave it queued.
+    }
   }
 }
 
