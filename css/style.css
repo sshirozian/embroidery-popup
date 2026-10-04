@@ -163,7 +163,7 @@ h1 {
 
 .options-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 16px;
   margin-bottom: 8px;
 }
@@ -268,6 +268,10 @@ h1 {
 
 .summary-row span { color: var(--muted); }
 
+@page {
+  margin: 10mm;
+}
+
 @media print {
   body * { visibility: hidden; }
   .thankyou, .thankyou * { visibility: visible; }
@@ -277,7 +281,14 @@ h1 {
     top: 0;
     left: 0;
     width: 100%;
+    padding: 0;
   }
+  .thankyou .big { display: none; }
+  .thankyou h1 { font-size: 18px; margin: 0 0 4px; }
+  .thankyou .subtitle { font-size: 12px; margin: 0 0 6px; }
+  .order-number { font-size: 44px; margin: 0 0 10px; }
+  .order-summary { padding: 6px 14px; margin: 0; }
+  .summary-row { font-size: 13px; padding: 5px 0; }
 }
 
 .footer-link {
