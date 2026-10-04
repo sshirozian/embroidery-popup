@@ -234,6 +234,7 @@ function wireConfigActions() {
   document.getElementById('initialsMaxInput').value = config.initialsMaxLength || 3;
   document.getElementById('idleResetInput').value =
     config.idleResetSeconds === 0 ? 0 : (config.idleResetSeconds || 60);
+  document.getElementById('sheetWebAppUrlInput').value = config.sheetWebAppUrl || '';
 
   document.getElementById('logoInput').addEventListener('change', async (e) => {
     if (e.target.files[0]) {
@@ -258,6 +259,7 @@ function wireConfigActions() {
     config.initialsMaxLength = Number.isFinite(max) && max > 0 ? max : 3;
     const idle = parseInt(document.getElementById('idleResetInput').value, 10);
     config.idleResetSeconds = Number.isFinite(idle) && idle >= 0 ? idle : 60;
+    config.sheetWebAppUrl = document.getElementById('sheetWebAppUrlInput').value.trim() || null;
     await setConfig(config);
     toast('Configuration saved.');
   });
@@ -281,6 +283,7 @@ function buildColumns(subs) {
   cols.push({ key: '__font', label: 'Style Chosen' });
   cols.push({ key: '__initials', label: 'Initials' });
   cols.push({ key: '__time', label: 'Submitted At' });
+  if (config.sheetWebAppUrl) cols.push({ key: '__synced', label: 'Synced' });
   return cols;
 }
 
@@ -315,6 +318,7 @@ function renderSubsTable(subs) {
       else if (c.key === '__font') td.textContent = s.fontOptionLabel || '';
       else if (c.key === '__initials') td.textContent = s.initials || '';
       else if (c.key === '__time') td.textContent = new Date(s.timestamp).toLocaleString();
+      else if (c.key === '__synced') td.textContent = s.synced ? '✓' : '—';
       else td.textContent = (s.values && s.values[c.key]) || '';
       tr.appendChild(td);
     });
@@ -358,6 +362,13 @@ async function exportCsv() {
 function wireSubmissionsActions() {
   document.getElementById('refreshSubsBtn').addEventListener('click', loadSubmissions);
   document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
+  document.getElementById('retrySyncBtn').addEventListener('click', async () => {
+    if (!config.sheetWebAppUrl) { toast('No Google Sheet URL configured.'); return; }
+    toast('Retrying sync...');
+    await retryPendingSyncs(config);
+    loadSubmissions();
+    toast('Sync retry complete.');
+  });
   document.getElementById('clearSubsBtn').addEventListener('click', async () => {
     const confirmText = prompt('This will permanently delete all saved submissions. Type DELETE to confirm:');
     if (confirmText !== 'DELETE') return;
