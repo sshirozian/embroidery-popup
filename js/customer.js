@@ -176,12 +176,21 @@ async function submitOrder() {
   renderOrderSummary(values.firstName || '', values.lastName || '', submission.fontOptionLabel, submission.initials);
   showStep(4);
 
-  const doneTimer = setTimeout(() => window.location.reload(), 30000);
-  document.getElementById('completeBtn').addEventListener('click', () => {
+  const completeBtn = document.getElementById('completeBtn');
+  completeBtn.classList.add('hidden');
+  let doneTimer = null;
+
+  completeBtn.addEventListener('click', () => {
     clearTimeout(doneTimer);
     window.location.reload();
   }, { once: true });
-  document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+  document.getElementById('printBtn').addEventListener('click', () => {
+    window.print();
+    completeBtn.classList.remove('hidden');
+    clearTimeout(doneTimer);
+    doneTimer = setTimeout(() => window.location.reload(), 30000);
+  });
 }
 
 function renderOrderSummary(firstName, lastName, styleLabel, initials) {
