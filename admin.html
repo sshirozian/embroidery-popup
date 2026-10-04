@@ -78,6 +78,12 @@
         <input type="number" id="idleResetInput" class="number-field" min="0" max="600" />
       </div>
 
+      <div class="section-title">Cloud Sync (Google Sheets)</div>
+      <p class="help-text">Paste the Google Apps Script web app URL here to automatically copy every order into a Google Sheet, viewable from any computer. Leave blank to keep orders only on this iPad.</p>
+      <div class="field-row">
+        <input type="text" id="sheetWebAppUrlInput" placeholder="https://script.google.com/macros/s/.../exec" />
+      </div>
+
       <div class="btn-row">
         <button class="btn btn-primary" id="saveConfigBtn">Save Configuration</button>
       </div>
@@ -87,6 +93,7 @@
     <div class="tab-panel" id="subsTab">
       <div class="toolbar">
         <button class="small-btn" id="refreshSubsBtn">Refresh</button>
+        <button class="small-btn" id="retrySyncBtn">Retry Sync</button>
         <button class="small-btn" id="exportCsvBtn">Export CSV</button>
         <button class="small-btn" id="clearSubsBtn" style="color:var(--danger);">Clear All Submissions</button>
       </div>
