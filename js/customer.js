@@ -171,6 +171,7 @@ async function submitOrder() {
 
   await addSubmission(submission);
   document.getElementById('orderNumberDisplay').textContent = orderNumber;
+  renderOrderSummary(values.firstName || '', values.lastName || '', submission.fontOptionLabel, submission.initials);
   showStep(4);
 
   const doneTimer = setTimeout(() => window.location.reload(), 30000);
@@ -178,6 +179,28 @@ async function submitOrder() {
     clearTimeout(doneTimer);
     window.location.reload();
   }, { once: true });
+  document.getElementById('printBtn').addEventListener('click', () => window.print());
+}
+
+function renderOrderSummary(firstName, lastName, styleLabel, initials) {
+  const el = document.getElementById('orderSummary');
+  el.innerHTML = '';
+  const rows = [
+    ['Name', `${firstName} ${lastName}`.trim()],
+    ['Style', styleLabel],
+    ['Initials', initials],
+  ];
+  rows.forEach(([label, value]) => {
+    const row = document.createElement('div');
+    row.className = 'summary-row';
+    const l = document.createElement('span');
+    l.textContent = label;
+    const v = document.createElement('strong');
+    v.textContent = value;
+    row.appendChild(l);
+    row.appendChild(v);
+    el.appendChild(row);
+  });
 }
 
 function wireNav() {
