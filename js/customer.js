@@ -249,6 +249,7 @@ async function init() {
   startIdleWatcher();
   requestWakeLock();
   retryPendingSyncs(config); // fire-and-forget: catches up any orders missed while offline
+  retryPendingDeletes(config); // fire-and-forget: catches up any deletes missed while offline
 }
 
 init();
