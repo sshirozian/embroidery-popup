@@ -271,7 +271,7 @@ async function loadSubmissions() {
 }
 
 function buildColumns(subs) {
-  const cols = [];
+  const cols = [{ key: '__order', label: 'Order #' }];
   const seen = new Set();
   subs.forEach((s) => {
     Object.keys(s.fieldLabels || {}).forEach((fid) => {
@@ -311,7 +311,8 @@ function renderSubsTable(subs) {
     const tr = document.createElement('tr');
     cols.forEach((c) => {
       const td = document.createElement('td');
-      if (c.key === '__font') td.textContent = s.fontOptionLabel || '';
+      if (c.key === '__order') td.textContent = s.orderNumber ?? '';
+      else if (c.key === '__font') td.textContent = s.fontOptionLabel || '';
       else if (c.key === '__initials') td.textContent = s.initials || '';
       else if (c.key === '__time') td.textContent = new Date(s.timestamp).toLocaleString();
       else td.textContent = (s.values && s.values[c.key]) || '';
@@ -334,6 +335,7 @@ async function exportCsv() {
   const lines = [cols.map((c) => csvEscape(c.label)).join(',')];
   subs.forEach((s) => {
     const row = cols.map((c) => {
+      if (c.key === '__order') return csvEscape(s.orderNumber);
       if (c.key === '__font') return csvEscape(s.fontOptionLabel);
       if (c.key === '__initials') return csvEscape(s.initials);
       if (c.key === '__time') return csvEscape(new Date(s.timestamp).toLocaleString());
