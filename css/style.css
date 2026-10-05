@@ -271,11 +271,12 @@ h1 {
 .print-footer { display: none; }
 
 @page {
-  size: 72mm auto;
-  margin: 2mm;
+  size: 4in 6in;
+  margin: 0.15in;
 }
 
 @media print {
+  html, body { width: 4in; height: 6in; }
   body * { visibility: hidden; }
   .thankyou, .thankyou * { visibility: visible; }
   .thankyou .btn-row { display: none; }
@@ -283,8 +284,7 @@ h1 {
     position: absolute;
     top: 0;
     left: 0;
-    width: 72mm;
-    max-width: 100%;
+    width: 100%;
     padding: 0;
   }
   /* Force plain black-on-white output so a thermal/receipt printer doesn't
