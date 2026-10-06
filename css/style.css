@@ -270,23 +270,46 @@ h1 {
 
 .print-footer { display: none; }
 
+.print-logo { display: none; }
+
 @page {
   size: 4in 6in;
-  margin: 0.15in;
+  margin: 0.05in;
 }
 
 @media print {
-  html, body { width: 4in; height: 6in; }
-  body * { visibility: hidden; }
-  .thankyou, .thankyou * { visibility: visible; }
-  .thankyou .btn-row { display: none; }
-  .thankyou {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    padding: 0;
+  /* step1/step2/step3 already carry the shared .hidden class by the time
+     Print is reachable (only shown on the thank-you screen), so they don't
+     need hiding here — just the parts that are always rendered. */
+  .steps, .footer-link { display: none; }
+
+  html, body { width: 4in; margin: 0; background: #fff; }
+
+  .app { min-height: 0; padding: 0; }
+
+  /* The on-screen logo (configurable, may be in color) never prints —
+     only the fixed black print-logo image does. */
+  .logo-wrap { display: none; }
+
+  .print-logo {
+    display: block;
+    max-width: 65%;
+    margin: 0 auto 8px;
   }
+
+  .card {
+    box-shadow: none;
+    background: transparent;
+    padding: 0;
+    width: 100%;
+    max-width: none;
+  }
+
+  .thankyou { padding: 0; }
+  .thankyou .big { display: none; }
+  .thankyou h1 { display: none; } /* avoid printing "Thank You!" twice — .print-footer covers it */
+  .thankyou .btn-row { display: none; }
+
   /* Force plain black-on-white output so a thermal/receipt printer doesn't
      try to render colored fills or accent text. */
   .thankyou, .thankyou * {
@@ -294,8 +317,6 @@ h1 {
     background: transparent !important;
     box-shadow: none !important;
   }
-  .thankyou .big { display: none; }
-  .thankyou h1 { font-size: 16px; margin: 0 0 4px; }
   .thankyou .subtitle { font-size: 11px; margin: 0 0 6px; }
   .order-number { font-size: 36px; margin: 0 0 8px; }
   .order-summary {
