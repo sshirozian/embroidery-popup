@@ -1,5 +1,5 @@
 // Bump this version string whenever any cached file changes, so the iPad picks up updates.
-const CACHE_NAME = 'embroidery-popup-v8';
+const CACHE_NAME = 'embroidery-popup-v10';
 
 const ASSETS = [
   'index.html',
@@ -9,6 +9,7 @@ const ASSETS = [
   'js/customer.js',
   'js/admin.js',
   'manifest.json',
+  'print-logo.jpg',
 ];
 
 self.addEventListener('install', (event) => {
