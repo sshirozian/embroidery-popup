@@ -307,8 +307,8 @@ h1 {
 
   .print-logo {
     display: block;
-    max-width: 55%;
-    margin: 0 auto 4px;
+    max-width: 35%;
+    margin: 0 auto 2px;
   }
 
   .card {
@@ -322,9 +322,10 @@ h1 {
     overflow: hidden;
   }
 
-  .thankyou { padding: 0; }
+  .thankyou { padding: 0; line-height: 1; }
   .thankyou .big { display: none; }
   .thankyou h1 { display: none; } /* avoid printing "Thank You!" twice — .print-footer covers it */
+  .thankyou .subtitle { display: none; } /* redundant with the big order number below it */
   .thankyou .btn-row { display: none; }
 
   /* Force plain black-on-white output so a thermal/receipt printer doesn't
@@ -334,26 +335,27 @@ h1 {
     background: transparent !important;
     box-shadow: none !important;
   }
-  .thankyou .subtitle { font-size: 8px; margin: 0 0 3px; }
-  .order-number { font-size: 26px; margin: 0 0 5px; }
+  .order-number { font-size: 18px; line-height: 1; margin: 0 0 2px; }
   .order-summary {
-    padding: 3px 0;
+    padding: 1px 0;
     margin: 0;
     border-top: 1px dashed #000;
     border-bottom: 1px dashed #000;
   }
   .summary-row {
-    font-size: 9px;
-    padding: 2px 0;
+    font-size: 7px;
+    line-height: 1.1;
+    padding: 1px 0;
     border-bottom: 1px dashed #000;
   }
   .summary-row:last-child { border-bottom: none; }
   .print-footer {
     display: block;
-    font-size: 10px;
+    font-size: 7px;
+    line-height: 1;
     font-weight: 700;
     text-align: center;
-    margin-top: 5px;
+    margin-top: 2px;
   }
 }
 
