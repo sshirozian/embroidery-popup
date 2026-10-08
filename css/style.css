@@ -273,8 +273,8 @@ h1 {
 .print-logo { display: none; }
 
 @page {
-  size: 4in 6in;
-  margin: 0.05in;
+  size: 3in 2in;
+  margin: 0.03in;
 }
 
 @media print {
@@ -283,7 +283,7 @@ h1 {
      need hiding here — just the parts that are always rendered. */
   .steps, .footer-link { display: none; }
 
-  html, body { width: 4in; margin: 0; background: #fff; }
+  html, body { width: 3in; margin: 0; background: #fff; }
 
   .app { min-height: 0; padding: 0; }
 
@@ -293,8 +293,8 @@ h1 {
 
   .print-logo {
     display: block;
-    max-width: 65%;
-    margin: 0 auto 8px;
+    max-width: 55%;
+    margin: 0 auto 4px;
   }
 
   .card {
@@ -317,26 +317,26 @@ h1 {
     background: transparent !important;
     box-shadow: none !important;
   }
-  .thankyou .subtitle { font-size: 11px; margin: 0 0 6px; }
-  .order-number { font-size: 36px; margin: 0 0 8px; }
+  .thankyou .subtitle { font-size: 8px; margin: 0 0 3px; }
+  .order-number { font-size: 26px; margin: 0 0 5px; }
   .order-summary {
-    padding: 4px 0;
+    padding: 3px 0;
     margin: 0;
     border-top: 1px dashed #000;
     border-bottom: 1px dashed #000;
   }
   .summary-row {
-    font-size: 12px;
-    padding: 4px 0;
+    font-size: 9px;
+    padding: 2px 0;
     border-bottom: 1px dashed #000;
   }
   .summary-row:last-child { border-bottom: none; }
   .print-footer {
     display: block;
-    font-size: 14px;
+    font-size: 10px;
     font-weight: 700;
     text-align: center;
-    margin-top: 10px;
+    margin-top: 5px;
   }
 }
 
