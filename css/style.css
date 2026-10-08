@@ -283,9 +283,23 @@ h1 {
      need hiding here — just the parts that are always rendered. */
   .steps, .footer-link { display: none; }
 
-  html, body { width: 3in; margin: 0; background: #fff; }
+  html, body {
+    width: 3in;
+    height: 2in;
+    max-height: 2in;
+    margin: 0;
+    background: #fff;
+    overflow: hidden;
+  }
 
-  .app { min-height: 0; padding: 0; }
+  .app {
+    display: block;
+    min-height: 0;
+    height: 2in;
+    max-height: 2in;
+    padding: 0;
+    overflow: hidden;
+  }
 
   /* The on-screen logo (configurable, may be in color) never prints —
      only the fixed black print-logo image does. */
@@ -303,6 +317,9 @@ h1 {
     padding: 0;
     width: 100%;
     max-width: none;
+    height: auto;
+    max-height: 2in;
+    overflow: hidden;
   }
 
   .thankyou { padding: 0; }
