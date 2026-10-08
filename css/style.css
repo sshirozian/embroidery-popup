@@ -307,7 +307,7 @@ h1 {
 
   .print-logo {
     display: block;
-    max-width: 35%;
+    max-width: 24%;
     margin: 0 auto 2px;
   }
 
@@ -335,23 +335,24 @@ h1 {
     background: transparent !important;
     box-shadow: none !important;
   }
-  .order-number { font-size: 18px; line-height: 1; margin: 0 0 2px; }
+  .order-number { font-size: 56px; line-height: 1; margin: 0 0 2px; }
   .order-summary {
     padding: 1px 0;
     margin: 0;
-    border-top: 1px dashed #000;
-    border-bottom: 1px dashed #000;
   }
   .summary-row {
-    font-size: 7px;
-    line-height: 1.1;
-    padding: 1px 0;
-    border-bottom: 1px dashed #000;
+    display: flex;
+    justify-content: flex-start;
+    gap: 4px;
+    font-size: 10px;
+    line-height: 1.15;
+    padding: 0;
+    border-bottom: none;
   }
-  .summary-row:last-child { border-bottom: none; }
+  .summary-row span::after { content: ':'; }
   .print-footer {
     display: block;
-    font-size: 7px;
+    font-size: 8px;
     line-height: 1;
     font-weight: 700;
     text-align: center;
