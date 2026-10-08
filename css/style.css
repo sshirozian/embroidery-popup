@@ -420,10 +420,10 @@ h1 {
     text-align: center;
     margin-top: 42px;
   }
-  .print-qr {
+   .print-qr {
     display: block;
-    width: 100px;
-    height: 100px;
+    width: 135px;
+    height: 135px;
     margin: 10px auto 0;
   }
   .print-qr-caption {
