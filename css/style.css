@@ -299,8 +299,8 @@ h1 {
 }
 
 .venmo-qr-image {
-  width: 270px;
-  max-width: 80%;
+  width: 320px;
+  max-width: 85%;
   height: auto;
   aspect-ratio: 1 / 1;
   object-fit: contain;
