@@ -249,6 +249,70 @@ h1 {
   color: var(--muted);
 }
 
+.payment-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.payment-card {
+  border: 3px solid var(--border);
+  border-radius: 16px;
+  padding: 22px 8px;
+  background: var(--bg);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, transform 0.1s;
+}
+
+.payment-card:active { transform: scale(0.97); }
+
+.payment-card.selected {
+  border-color: var(--accent);
+  background: #eaf4f1;
+}
+
+.payment-icon {
+  font-size: 30px;
+  margin-bottom: 8px;
+}
+
+.payment-label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.venmo-qr-box {
+  text-align: center;
+  margin-top: 28px;
+  padding: 20px;
+  background: var(--bg);
+  border-radius: 16px;
+}
+
+.venmo-qr-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  margin: 0 0 14px;
+}
+
+.venmo-qr-image {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.venmo-qr-fallback {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+}
+
 .initials-input {
   width: 100%;
   text-align: center;
@@ -392,8 +456,8 @@ h1 {
     display: flex;
     justify-content: center;
     gap: 8px;
-    font-size: 16px;
-    line-height: 1.15;
+    font-size: 14px;
+    line-height: 1.1;
     padding: 0;
     border-bottom: none;
   }
@@ -404,14 +468,14 @@ h1 {
     line-height: 1;
     font-weight: 700;
     text-align: center;
-    margin-top: 6px;
+    margin-top: 4px;
   }
   .print-qr-heading {
     display: block;
     font-size: 18px;
     font-weight: 700;
     text-align: center;
-    margin-top: 18px;
+    margin-top: 10px;
   }
   .print-qr {
     display: block;

@@ -51,11 +51,13 @@ function defaultConfig() {
     idleResetSeconds: 60,
     pinHash: null,
     sheetWebAppUrl: null,
+    venmoQrImage: null,
     enabledSteps: {
       customerInfo: true,
       itemOptions: true,
       fontStyle: true,
       nameInitials: true,
+      payment: true,
     },
   };
 }
@@ -78,6 +80,9 @@ async function getConfigOrDefault() {
   if (!Array.isArray(cfg.productOptions)) cfg.productOptions = defaultConfig().productOptions;
   // Backfills config saved before per-page enable/disable toggles existed.
   if (!cfg.enabledSteps) cfg.enabledSteps = defaultConfig().enabledSteps;
+  // Backfills config saved before the payment step existed, so it defaults
+  // to enabled rather than silently missing for configs saved just before this.
+  if (cfg.enabledSteps.payment === undefined) cfg.enabledSteps.payment = true;
   return cfg;
 }
 
@@ -240,6 +245,7 @@ async function syncSubmission(cfg, sub) {
       styleLabel: sub.fontOptionLabel,
       threadColor: sub.threadColorLabel,
       initials: sub.initials,
+      paymentMethod: sub.paymentMethodLabel,
     };
     const res = await fetch(cfg.sheetWebAppUrl, {
       method: 'POST',

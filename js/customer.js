@@ -2,6 +2,7 @@ let config = null;
 let selectedProductId = null;
 let selectedOptionId = null;
 let selectedColorId = null;
+let selectedPaymentMethod = null;
 const values = {};
 let currentStep = 1;
 let lastActivity = Date.now();
@@ -15,6 +16,7 @@ const STEP_DEFS = {
   stepProduct: { validate: () => validateStepProduct(), onEnter: () => renderProductOptions() },
   step2: { validate: () => validateStep2(), onEnter: () => { renderOptions(); renderColorOptions(); } },
   step3: { validate: () => validateStep3() },
+  stepPayment: { validate: () => validateStepPayment(), onEnter: () => renderPaymentOptions() },
 };
 
 function getActiveSteps() {
@@ -23,10 +25,17 @@ function getActiveSteps() {
   if (config.enabledSteps.itemOptions) seq.push('stepProduct');
   if (config.enabledSteps.fontStyle) seq.push('step2');
   if (config.enabledSteps.nameInitials) seq.push('step3');
+  if (config.enabledSteps.payment) seq.push('stepPayment');
   seq.push('stepDone');
   seq.push('stepComplete');
   return seq;
 }
+
+const PAYMENT_METHODS = [
+  { id: 'venmo', label: 'Venmo', icon: '📲' },
+  { id: 'cash', label: 'Cash', icon: '💵' },
+  { id: 'check', label: 'Check', icon: '🧾' },
+];
 
 const THREAD_COLORS = [
   { id: 'red', label: 'Red', hex: '#c0392b' },
@@ -72,7 +81,7 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') requestWakeLock();
 });
 
-const ALL_STEP_IDS = ['step1', 'stepProduct', 'step2', 'step3', 'stepDone', 'stepComplete'];
+const ALL_STEP_IDS = ['step1', 'stepProduct', 'step2', 'step3', 'stepPayment', 'stepDone', 'stepComplete'];
 
 function showStep(n) {
   currentStep = n;
@@ -203,6 +212,48 @@ function renderColorOptions() {
   });
 }
 
+function renderPaymentOptions() {
+  const grid = document.getElementById('paymentGrid');
+  grid.innerHTML = '';
+  PAYMENT_METHODS.forEach((m) => {
+    const card = document.createElement('div');
+    card.className = 'payment-card' + (m.id === selectedPaymentMethod ? ' selected' : '');
+    card.addEventListener('click', () => {
+      selectedPaymentMethod = m.id;
+      renderPaymentOptions();
+    });
+    const icon = document.createElement('div');
+    icon.className = 'payment-icon';
+    icon.textContent = m.icon;
+    const lbl = document.createElement('div');
+    lbl.className = 'payment-label';
+    lbl.textContent = m.label;
+    card.appendChild(icon);
+    card.appendChild(lbl);
+    grid.appendChild(card);
+  });
+  updateVenmoQrVisibility();
+}
+
+function updateVenmoQrVisibility() {
+  const box = document.getElementById('venmoQrBox');
+  const img = document.getElementById('venmoQrImage');
+  const fallback = document.getElementById('venmoQrFallback');
+  if (selectedPaymentMethod !== 'venmo') {
+    box.classList.add('hidden');
+    return;
+  }
+  box.classList.remove('hidden');
+  if (config.venmoQrImage) {
+    img.src = config.venmoQrImage;
+    img.classList.remove('hidden');
+    fallback.classList.add('hidden');
+  } else {
+    img.classList.add('hidden');
+    fallback.classList.remove('hidden');
+  }
+}
+
 function validateStep1() {
   const err = document.getElementById('step1Error');
   for (const f of config.fields) {
@@ -255,6 +306,16 @@ function validateStep3() {
   return true;
 }
 
+function validateStepPayment() {
+  const err = document.getElementById('stepPaymentError');
+  if (!selectedPaymentMethod) {
+    err.textContent = 'Please choose a payment method to continue.';
+    return false;
+  }
+  err.textContent = '';
+  return true;
+}
+
 function getInitialsMax() {
   const v = config.initialsMaxLength;
   return v === 0 ? Infinity : (v || 3);
@@ -277,6 +338,7 @@ async function submitOrder() {
   const chosenProduct = config.productOptions.find((o) => o.id === selectedProductId);
   const chosenStyle = config.fontOptions.find((o) => o.id === selectedOptionId);
   const chosenColor = THREAD_COLORS.find((c) => c.id === selectedColorId);
+  const chosenPayment = PAYMENT_METHODS.find((m) => m.id === selectedPaymentMethod);
   const orderNumber = await getNextOrderNumber();
 
   const submission = {
@@ -288,6 +350,7 @@ async function submitOrder() {
     fontOptionLabel: chosenStyle ? chosenStyle.label : '',
     threadColorLabel: chosenColor ? chosenColor.label : '',
     initials: document.getElementById('initialsInput').value.trim().toUpperCase(),
+    paymentMethodLabel: chosenPayment ? chosenPayment.label : '',
     synced: false,
   };
 
@@ -307,6 +370,7 @@ function renderOrderSummary(firstName, lastName, submission) {
     ['Style', submission.fontOptionLabel],
     ['Color', submission.threadColorLabel],
     ['Embroidered Text', submission.initials],
+    ['Payment', submission.paymentMethodLabel],
   ].filter(([, value]) => value);
   rows.forEach(([label, value]) => {
     const row = document.createElement('div');
@@ -346,10 +410,10 @@ function goBack() {
 }
 
 function wireNav() {
-  ['toProduct', 'toStep2', 'toStep3', 'submitBtn'].forEach((id) => {
+  ['toProduct', 'toStep2', 'toStep3', 'submitBtn', 'paymentNextBtn'].forEach((id) => {
     document.getElementById(id).addEventListener('click', goNext);
   });
-  ['toStep1', 'toProductBack', 'toStep2b'].forEach((id) => {
+  ['toStep1', 'toProductBack', 'toStep2b', 'paymentBackBtn'].forEach((id) => {
     document.getElementById(id).addEventListener('click', goBack);
   });
 

@@ -62,12 +62,23 @@
       <label class="inline-check" style="margin-bottom:10px;">
         <input type="checkbox" id="toggleNameInitials" /> Name / Initials
       </label>
+      <label class="inline-check" style="margin-bottom:10px;">
+        <input type="checkbox" id="togglePayment" /> Payment Method
+      </label>
 
       <div class="section-title">Logo</div>
       <div class="logo-upload-row">
         <img id="logoPreview" class="logo-preview hidden" />
         <input type="file" id="logoInput" accept="image/*" />
         <button class="small-btn" id="removeLogoBtn">Remove Logo</button>
+      </div>
+
+      <div class="section-title">Venmo QR Code</div>
+      <p class="help-text">Shown to customers on the payment page when they choose to pay with Venmo.</p>
+      <div class="logo-upload-row">
+        <img id="venmoQrPreview" class="logo-preview hidden" />
+        <input type="file" id="venmoQrInput" accept="image/*" />
+        <button class="small-btn" id="removeVenmoQrBtn">Remove QR Code</button>
       </div>
 
       <div class="section-title">Customer Fields</div>

@@ -110,6 +110,18 @@ function renderLogoPreview() {
   }
 }
 
+// ---- Config: Venmo QR code ----
+
+function renderVenmoQrPreview() {
+  const img = document.getElementById('venmoQrPreview');
+  if (config.venmoQrImage) {
+    img.src = config.venmoQrImage;
+    img.classList.remove('hidden');
+  } else {
+    img.classList.add('hidden');
+  }
+}
+
 // ---- Config: fields ----
 
 function renderFieldsEditor() {
@@ -274,6 +286,7 @@ function renderOptionsEditor() {
 
 function wireConfigActions() {
   renderLogoPreview();
+  renderVenmoQrPreview();
   renderFieldsEditor();
   renderProductOptionsEditor();
   renderOptionsEditor();
@@ -281,6 +294,7 @@ function wireConfigActions() {
   document.getElementById('toggleItemOptions').checked = !!config.enabledSteps.itemOptions;
   document.getElementById('toggleFontStyle').checked = !!config.enabledSteps.fontStyle;
   document.getElementById('toggleNameInitials').checked = !!config.enabledSteps.nameInitials;
+  document.getElementById('togglePayment').checked = !!config.enabledSteps.payment;
   document.getElementById('initialsMaxInput').value =
     config.initialsMaxLength === 0 ? 0 : (config.initialsMaxLength || 3);
   document.getElementById('idleResetInput').value =
@@ -300,6 +314,19 @@ function wireConfigActions() {
     renderLogoPreview();
   });
 
+  document.getElementById('venmoQrInput').addEventListener('change', async (e) => {
+    if (e.target.files[0]) {
+      config.venmoQrImage = await readFileAsDataURL(e.target.files[0]);
+      renderVenmoQrPreview();
+    }
+  });
+
+  document.getElementById('removeVenmoQrBtn').addEventListener('click', () => {
+    config.venmoQrImage = null;
+    document.getElementById('venmoQrInput').value = '';
+    renderVenmoQrPreview();
+  });
+
   document.getElementById('addProductOptionBtn').addEventListener('click', () => {
     config.productOptions.push({ id: makeId(), label: 'New Option', image: null });
     renderProductOptionsEditor();
@@ -316,6 +343,7 @@ function wireConfigActions() {
       itemOptions: document.getElementById('toggleItemOptions').checked,
       fontStyle: document.getElementById('toggleFontStyle').checked,
       nameInitials: document.getElementById('toggleNameInitials').checked,
+      payment: document.getElementById('togglePayment').checked,
     };
     if (!Object.values(enabledSteps).some(Boolean)) {
       toast('At least one page must stay enabled.');
@@ -352,6 +380,7 @@ function buildColumns(subs) {
   cols.push({ key: '__font', label: 'Style Chosen' });
   cols.push({ key: '__color', label: 'Thread Color' });
   cols.push({ key: '__initials', label: 'Name / Initials' });
+  cols.push({ key: '__payment', label: 'Payment Method' });
   cols.push({ key: '__time', label: 'Submitted At' });
   if (config.sheetWebAppUrl) cols.push({ key: '__synced', label: 'Synced' });
   return cols;
@@ -390,6 +419,7 @@ function renderSubsTable(subs) {
       else if (c.key === '__font') td.textContent = s.fontOptionLabel || '';
       else if (c.key === '__color') td.textContent = s.threadColorLabel || '';
       else if (c.key === '__initials') td.textContent = s.initials || '';
+      else if (c.key === '__payment') td.textContent = s.paymentMethodLabel || '';
       else if (c.key === '__time') td.textContent = new Date(s.timestamp).toLocaleString();
       else if (c.key === '__synced') td.textContent = s.synced ? '✓' : '—';
       else td.textContent = (s.values && s.values[c.key]) || '';
@@ -433,6 +463,7 @@ async function exportCsv() {
       if (c.key === '__font') return csvEscape(s.fontOptionLabel);
       if (c.key === '__color') return csvEscape(s.threadColorLabel);
       if (c.key === '__initials') return csvEscape(s.initials);
+      if (c.key === '__payment') return csvEscape(s.paymentMethodLabel);
       if (c.key === '__time') return csvEscape(new Date(s.timestamp).toLocaleString());
       return csvEscape(s.values && s.values[c.key]);
     });

@@ -67,11 +67,30 @@
       <div class="error-text" id="step3Error"></div>
       <div class="btn-row">
         <button class="btn btn-secondary" id="toStep2b">Back</button>
-        <button class="btn btn-primary" id="submitBtn">Enter</button>
+        <button class="btn btn-primary" id="submitBtn">Next</button>
       </div>
     </section>
 
-    <!-- Step 5: print -->
+    <!-- Step 5: payment method -->
+    <section id="stepPayment" class="hidden">
+      <h1>How Would You Like to Pay?</h1>
+      <p class="subtitle">Tap an option below to select it.</p>
+      <div class="payment-grid" id="paymentGrid"></div>
+
+      <div class="venmo-qr-box hidden" id="venmoQrBox">
+        <p class="venmo-qr-label">Scan to pay with Venmo</p>
+        <img class="venmo-qr-image hidden" id="venmoQrImage" alt="Venmo QR code" />
+        <p class="venmo-qr-fallback hidden" id="venmoQrFallback">Venmo QR code not set up yet — please pay a staff member directly.</p>
+      </div>
+
+      <div class="error-text" id="stepPaymentError"></div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="paymentBackBtn">Back</button>
+        <button class="btn btn-primary" id="paymentNextBtn">Next</button>
+      </div>
+    </section>
+
+    <!-- Step 6: print -->
     <section id="stepDone" class="hidden">
       <div class="thankyou">
         <img src="print-logo.jpg" alt="" class="print-logo" />
@@ -91,7 +110,7 @@
       </div>
     </section>
 
-    <!-- Step 6: complete -->
+    <!-- Step 7: complete -->
     <section id="stepComplete" class="hidden">
       <div class="thankyou">
         <div class="big">✓</div>
