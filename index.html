@@ -112,6 +112,9 @@
 <script src="js/customer.js"></script>
 <script>
   if ('serviceWorker' in navigator) {
+    // Auto-reload once when a newly installed service worker takes over, so an
+    // update is picked up without needing a manual close-and-reopen on the iPad.
+    navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
   }
 </script>

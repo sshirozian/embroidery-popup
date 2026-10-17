@@ -48,6 +48,21 @@
     <!-- Configuration tab -->
     <div class="tab-panel active" id="configTab">
 
+      <div class="section-title">Pages</div>
+      <p class="help-text">Turn off any page you don't need right now. The kiosk will skip straight past disabled pages. At least one must stay on.</p>
+      <label class="inline-check" style="margin-bottom:10px;">
+        <input type="checkbox" id="toggleCustomerInfo" /> Customer Info (Name / Phone / Email)
+      </label>
+      <label class="inline-check" style="margin-bottom:10px;">
+        <input type="checkbox" id="toggleItemOptions" /> Item Options
+      </label>
+      <label class="inline-check" style="margin-bottom:10px;">
+        <input type="checkbox" id="toggleFontStyle" /> Font Style &amp; Thread Color
+      </label>
+      <label class="inline-check" style="margin-bottom:10px;">
+        <input type="checkbox" id="toggleNameInitials" /> Name / Initials
+      </label>
+
       <div class="section-title">Logo</div>
       <div class="logo-upload-row">
         <img id="logoPreview" class="logo-preview hidden" />
@@ -120,6 +135,9 @@
 <script src="js/admin.js"></script>
 <script>
   if ('serviceWorker' in navigator) {
+    // Auto-reload once when a newly installed service worker takes over, so an
+    // update is picked up without needing a manual close-and-reopen on the iPad.
+    navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
     window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
   }
 </script>

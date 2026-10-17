@@ -8,7 +8,25 @@ let lastActivity = Date.now();
 let wakeLockSentinel = null;
 let doneTimer = null;
 
-const steps = ['step1', 'stepProduct', 'step2', 'step3', 'stepDone', 'stepComplete'];
+let activeSteps = [];
+
+const STEP_DEFS = {
+  step1: { validate: () => validateStep1() },
+  stepProduct: { validate: () => validateStepProduct(), onEnter: () => renderProductOptions() },
+  step2: { validate: () => validateStep2(), onEnter: () => { renderOptions(); renderColorOptions(); } },
+  step3: { validate: () => validateStep3() },
+};
+
+function getActiveSteps() {
+  const seq = [];
+  if (config.enabledSteps.customerInfo) seq.push('step1');
+  if (config.enabledSteps.itemOptions) seq.push('stepProduct');
+  if (config.enabledSteps.fontStyle) seq.push('step2');
+  if (config.enabledSteps.nameInitials) seq.push('step3');
+  seq.push('stepDone');
+  seq.push('stepComplete');
+  return seq;
+}
 
 const THREAD_COLORS = [
   { id: 'red', label: 'Red', hex: '#c0392b' },
@@ -32,7 +50,8 @@ function startIdleWatcher() {
   setInterval(() => {
     const idleSeconds = config.idleResetSeconds;
     if (!idleSeconds || idleSeconds <= 0) return;
-    if (currentStep === 1 || currentStep === 5 || currentStep === 6) return; // welcome / print / complete handle themselves
+    const stepId = activeSteps[currentStep - 1];
+    if (currentStep === 1 || stepId === 'stepDone' || stepId === 'stepComplete') return; // welcome / print / complete handle themselves
     if (Date.now() - lastActivity > idleSeconds * 1000) {
       window.location.reload();
     }
@@ -53,10 +72,13 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') requestWakeLock();
 });
 
+const ALL_STEP_IDS = ['step1', 'stepProduct', 'step2', 'step3', 'stepDone', 'stepComplete'];
+
 function showStep(n) {
   currentStep = n;
-  steps.forEach((id, i) => {
-    document.getElementById(id).classList.toggle('hidden', i !== n - 1);
+  const activeId = activeSteps[n - 1];
+  ALL_STEP_IDS.forEach((id) => {
+    document.getElementById(id).classList.toggle('hidden', id !== activeId);
   });
   renderDots();
 }
@@ -64,8 +86,9 @@ function showStep(n) {
 function renderDots() {
   const dots = document.getElementById('stepsDots');
   dots.innerHTML = '';
-  if (currentStep > 4) return;
-  for (let i = 1; i <= 4; i++) {
+  const dotSteps = activeSteps.length - 2; // exclude stepDone, stepComplete
+  if (currentStep > dotSteps) return;
+  for (let i = 1; i <= dotSteps; i++) {
     const d = document.createElement('div');
     d.className = 'step-dot' + (i === currentStep ? ' active' : i < currentStep ? ' done' : '');
     dots.appendChild(d);
@@ -272,7 +295,7 @@ async function submitOrder() {
   syncSubmission(config, submission); // fire-and-forget: never block the kiosk flow on network
   document.getElementById('orderNumberDisplay').textContent = orderNumber;
   renderOrderSummary(values.firstName || '', values.lastName || '', submission);
-  showStep(5);
+  showStep(activeSteps.indexOf('stepDone') + 1);
 }
 
 function renderOrderSummary(firstName, lastName, submission) {
@@ -303,21 +326,31 @@ function restartDoneTimer() {
   doneTimer = setTimeout(() => window.location.reload(), 30000);
 }
 
+function goNext() {
+  const curId = activeSteps[currentStep - 1];
+  const def = STEP_DEFS[curId];
+  if (def && def.validate && !def.validate()) return;
+
+  const nextId = activeSteps[currentStep]; // currentStep is 1-based, so this is index of the next step
+  if (nextId === 'stepDone') {
+    submitOrder();
+    return;
+  }
+  showStep(currentStep + 1);
+  const nextDef = STEP_DEFS[nextId];
+  if (nextDef && nextDef.onEnter) nextDef.onEnter();
+}
+
+function goBack() {
+  showStep(currentStep - 1);
+}
+
 function wireNav() {
-  document.getElementById('toProduct').addEventListener('click', () => {
-    if (validateStep1()) { showStep(2); renderProductOptions(); }
+  ['toProduct', 'toStep2', 'toStep3', 'submitBtn'].forEach((id) => {
+    document.getElementById(id).addEventListener('click', goNext);
   });
-  document.getElementById('toStep1').addEventListener('click', () => showStep(1));
-  document.getElementById('toStep2').addEventListener('click', () => {
-    if (validateStepProduct()) { showStep(3); renderOptions(); renderColorOptions(); }
-  });
-  document.getElementById('toProductBack').addEventListener('click', () => showStep(2));
-  document.getElementById('toStep3').addEventListener('click', () => {
-    if (validateStep2()) showStep(4);
-  });
-  document.getElementById('toStep2b').addEventListener('click', () => showStep(3));
-  document.getElementById('submitBtn').addEventListener('click', () => {
-    if (validateStep3()) submitOrder();
+  ['toStep1', 'toProductBack', 'toStep2b'].forEach((id) => {
+    document.getElementById(id).addEventListener('click', goBack);
   });
 
   document.getElementById('printBtn').addEventListener('click', () => {
@@ -325,8 +358,8 @@ function wireNav() {
     document.getElementById('nextFromPrintBtn').classList.remove('hidden');
     restartDoneTimer();
   });
-  document.getElementById('nextFromPrintBtn').addEventListener('click', () => showStep(6));
-  document.getElementById('backToPrintBtn').addEventListener('click', () => showStep(5));
+  document.getElementById('nextFromPrintBtn').addEventListener('click', () => showStep(activeSteps.indexOf('stepComplete') + 1));
+  document.getElementById('backToPrintBtn').addEventListener('click', () => showStep(activeSteps.indexOf('stepDone') + 1));
   document.getElementById('completeBtn').addEventListener('click', () => {
     clearTimeout(doneTimer);
     window.location.reload();
@@ -344,6 +377,7 @@ function wireNav() {
 
 async function init() {
   config = await getConfigOrDefault();
+  activeSteps = getActiveSteps();
   const max = getInitialsMax();
   document.getElementById('initialsHint').textContent = isFinite(max)
     ? `Enter up to ${max} letters to be embroidered.`
@@ -354,6 +388,8 @@ async function init() {
   renderFields();
   wireNav();
   showStep(1);
+  const firstDef = STEP_DEFS[activeSteps[0]];
+  if (firstDef && firstDef.onEnter) firstDef.onEnter();
   startIdleWatcher();
   requestWakeLock();
   retryPendingSyncs(config); // fire-and-forget: catches up any orders missed while offline

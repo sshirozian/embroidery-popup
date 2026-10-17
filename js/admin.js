@@ -277,6 +277,10 @@ function wireConfigActions() {
   renderFieldsEditor();
   renderProductOptionsEditor();
   renderOptionsEditor();
+  document.getElementById('toggleCustomerInfo').checked = !!config.enabledSteps.customerInfo;
+  document.getElementById('toggleItemOptions').checked = !!config.enabledSteps.itemOptions;
+  document.getElementById('toggleFontStyle').checked = !!config.enabledSteps.fontStyle;
+  document.getElementById('toggleNameInitials').checked = !!config.enabledSteps.nameInitials;
   document.getElementById('initialsMaxInput').value =
     config.initialsMaxLength === 0 ? 0 : (config.initialsMaxLength || 3);
   document.getElementById('idleResetInput').value =
@@ -307,6 +311,18 @@ function wireConfigActions() {
   });
 
   document.getElementById('saveConfigBtn').addEventListener('click', async () => {
+    const enabledSteps = {
+      customerInfo: document.getElementById('toggleCustomerInfo').checked,
+      itemOptions: document.getElementById('toggleItemOptions').checked,
+      fontStyle: document.getElementById('toggleFontStyle').checked,
+      nameInitials: document.getElementById('toggleNameInitials').checked,
+    };
+    if (!Object.values(enabledSteps).some(Boolean)) {
+      toast('At least one page must stay enabled.');
+      return;
+    }
+    config.enabledSteps = enabledSteps;
+
     const max = parseInt(document.getElementById('initialsMaxInput').value, 10);
     config.initialsMaxLength = Number.isFinite(max) && max >= 0 ? max : 3;
     const idle = parseInt(document.getElementById('idleResetInput').value, 10);

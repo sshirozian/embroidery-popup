@@ -38,6 +38,8 @@ function defaultConfig() {
     productOptions: [
       { id: makeId(), label: 'Option 1', image: null },
       { id: makeId(), label: 'Option 2', image: null },
+      { id: makeId(), label: 'Option 3', image: null },
+      { id: makeId(), label: 'Option 4', image: null },
     ],
     fontOptions: [
       { id: makeId(), label: 'Option 1', image: null },
@@ -49,6 +51,12 @@ function defaultConfig() {
     idleResetSeconds: 60,
     pinHash: null,
     sheetWebAppUrl: null,
+    enabledSteps: {
+      customerInfo: true,
+      itemOptions: true,
+      fontStyle: true,
+      nameInitials: true,
+    },
   };
 }
 
@@ -68,6 +76,8 @@ async function getConfigOrDefault() {
   // Backfills config saved before productOptions existed, so older saved
   // configs don't crash the new item-selection step.
   if (!Array.isArray(cfg.productOptions)) cfg.productOptions = defaultConfig().productOptions;
+  // Backfills config saved before per-page enable/disable toggles existed.
+  if (!cfg.enabledSteps) cfg.enabledSteps = defaultConfig().enabledSteps;
   return cfg;
 }
 

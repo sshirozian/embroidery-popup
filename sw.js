@@ -1,5 +1,5 @@
 // Bump this version string whenever any cached file changes, so the iPad picks up updates.
-const CACHE_NAME = 'embroidery-popup-v23';
+const CACHE_NAME = 'embroidery-popup-v24';
 
 const ASSETS = [
   'index.html',
