@@ -35,6 +35,10 @@ function defaultConfig() {
       { id: 'phone', label: 'Phone Number', type: 'tel', required: true },
       { id: 'email', label: 'Email', type: 'email', required: true },
     ],
+    productOptions: [
+      { id: makeId(), label: 'Option 1', image: null },
+      { id: makeId(), label: 'Option 2', image: null },
+    ],
     fontOptions: [
       { id: makeId(), label: 'Option 1', image: null },
       { id: makeId(), label: 'Option 2', image: null },
@@ -60,7 +64,11 @@ async function getConfig() {
 
 async function getConfigOrDefault() {
   const cfg = await getConfig();
-  return cfg || defaultConfig();
+  if (!cfg) return defaultConfig();
+  // Backfills config saved before productOptions existed, so older saved
+  // configs don't crash the new item-selection step.
+  if (!Array.isArray(cfg.productOptions)) cfg.productOptions = defaultConfig().productOptions;
+  return cfg;
 }
 
 async function setConfig(config) {
@@ -218,7 +226,9 @@ async function syncSubmission(cfg, sub) {
       orderNumber: sub.orderNumber,
       timestamp: sub.timestamp,
       fields: cfg.fields.map((f) => ({ label: f.label, value: (sub.values && sub.values[f.id]) || '' })),
+      productLabel: sub.productOptionLabel,
       styleLabel: sub.fontOptionLabel,
+      threadColor: sub.threadColorLabel,
       initials: sub.initials,
     };
     const res = await fetch(cfg.sheetWebAppUrl, {

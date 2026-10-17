@@ -60,15 +60,21 @@
       <div id="fieldsEditor"></div>
       <button class="small-btn" id="addFieldBtn">+ Add Field</button>
 
+      <div class="section-title">Item Options</div>
+      <p class="help-text">These appear on a new page right after customer info, before font/style. Add as many options as you like and upload an image for each. Customers pick one.</p>
+      <div id="productOptionsEditor"></div>
+      <button class="small-btn" id="addProductOptionBtn">+ Add Option</button>
+
       <div class="section-title">Font / Style Options</div>
       <p class="help-text">Add as many options as you like and upload an image for each. Customers pick one.</p>
       <div id="optionsEditor"></div>
       <button class="small-btn" id="addOptionBtn">+ Add Option</button>
 
-      <div class="section-title">Initials</div>
+      <div class="section-title">Name / Initials</div>
+      <p class="help-text">Set to 0 for unlimited length (lets customers enter a full name instead of just initials).</p>
       <div class="field-row">
-        <label for="initialsMaxInput" style="font-weight:600; color:var(--muted); font-size:14px;">Max letters</label>
-        <input type="number" id="initialsMaxInput" class="number-field" min="1" max="10" />
+        <label for="initialsMaxInput" style="font-weight:600; color:var(--muted); font-size:14px;">Max letters (0 = unlimited)</label>
+        <input type="number" id="initialsMaxInput" class="number-field" min="0" max="40" />
       </div>
 
       <div class="section-title">Kiosk Behavior</div>

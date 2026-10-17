@@ -168,6 +168,58 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+// ---- Config: item/product options ----
+
+function renderProductOptionsEditor() {
+  const container = document.getElementById('productOptionsEditor');
+  container.innerHTML = '';
+  config.productOptions.forEach((opt, idx) => {
+    const row = document.createElement('div');
+    row.className = 'option-row';
+
+    if (opt.image) {
+      const img = document.createElement('img');
+      img.src = opt.image;
+      row.appendChild(img);
+    } else {
+      const ph = document.createElement('div');
+      ph.className = 'thumb-placeholder';
+      ph.textContent = 'no image';
+      row.appendChild(ph);
+    }
+
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'image/*';
+    fileInput.addEventListener('change', async () => {
+      if (fileInput.files[0]) {
+        opt.image = await readFileAsDataURL(fileInput.files[0]);
+        renderProductOptionsEditor();
+      }
+    });
+
+    const labelInput = document.createElement('input');
+    labelInput.type = 'text';
+    labelInput.value = opt.label;
+    labelInput.placeholder = 'Option label';
+    labelInput.addEventListener('input', () => { opt.label = labelInput.value; });
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'icon-btn';
+    removeBtn.textContent = '✕';
+    removeBtn.title = 'Remove option';
+    removeBtn.addEventListener('click', () => {
+      config.productOptions.splice(idx, 1);
+      renderProductOptionsEditor();
+    });
+
+    row.appendChild(fileInput);
+    row.appendChild(labelInput);
+    row.appendChild(removeBtn);
+    container.appendChild(row);
+  });
+}
+
 // ---- Config: font options ----
 
 function renderOptionsEditor() {
@@ -223,8 +275,10 @@ function renderOptionsEditor() {
 function wireConfigActions() {
   renderLogoPreview();
   renderFieldsEditor();
+  renderProductOptionsEditor();
   renderOptionsEditor();
-  document.getElementById('initialsMaxInput').value = config.initialsMaxLength || 3;
+  document.getElementById('initialsMaxInput').value =
+    config.initialsMaxLength === 0 ? 0 : (config.initialsMaxLength || 3);
   document.getElementById('idleResetInput').value =
     config.idleResetSeconds === 0 ? 0 : (config.idleResetSeconds || 60);
   document.getElementById('sheetWebAppUrlInput').value = config.sheetWebAppUrl || '';
@@ -242,6 +296,11 @@ function wireConfigActions() {
     renderLogoPreview();
   });
 
+  document.getElementById('addProductOptionBtn').addEventListener('click', () => {
+    config.productOptions.push({ id: makeId(), label: 'New Option', image: null });
+    renderProductOptionsEditor();
+  });
+
   document.getElementById('addOptionBtn').addEventListener('click', () => {
     config.fontOptions.push({ id: makeId(), label: 'New Option', image: null });
     renderOptionsEditor();
@@ -249,7 +308,7 @@ function wireConfigActions() {
 
   document.getElementById('saveConfigBtn').addEventListener('click', async () => {
     const max = parseInt(document.getElementById('initialsMaxInput').value, 10);
-    config.initialsMaxLength = Number.isFinite(max) && max > 0 ? max : 3;
+    config.initialsMaxLength = Number.isFinite(max) && max >= 0 ? max : 3;
     const idle = parseInt(document.getElementById('idleResetInput').value, 10);
     config.idleResetSeconds = Number.isFinite(idle) && idle >= 0 ? idle : 60;
     config.sheetWebAppUrl = document.getElementById('sheetWebAppUrlInput').value.trim() || null;
@@ -273,8 +332,10 @@ function buildColumns(subs) {
       if (!seen.has(fid)) { seen.add(fid); cols.push({ key: fid, label: s.fieldLabels[fid] }); }
     });
   });
+  cols.push({ key: '__product', label: 'Item' });
   cols.push({ key: '__font', label: 'Style Chosen' });
-  cols.push({ key: '__initials', label: 'Initials' });
+  cols.push({ key: '__color', label: 'Thread Color' });
+  cols.push({ key: '__initials', label: 'Name / Initials' });
   cols.push({ key: '__time', label: 'Submitted At' });
   if (config.sheetWebAppUrl) cols.push({ key: '__synced', label: 'Synced' });
   return cols;
@@ -309,7 +370,9 @@ function renderSubsTable(subs) {
     cols.forEach((c) => {
       const td = document.createElement('td');
       if (c.key === '__order') td.textContent = s.orderNumber ?? '';
+      else if (c.key === '__product') td.textContent = s.productOptionLabel || '';
       else if (c.key === '__font') td.textContent = s.fontOptionLabel || '';
+      else if (c.key === '__color') td.textContent = s.threadColorLabel || '';
       else if (c.key === '__initials') td.textContent = s.initials || '';
       else if (c.key === '__time') td.textContent = new Date(s.timestamp).toLocaleString();
       else if (c.key === '__synced') td.textContent = s.synced ? '✓' : '—';
@@ -350,7 +413,9 @@ async function exportCsv() {
   subs.forEach((s) => {
     const row = cols.map((c) => {
       if (c.key === '__order') return csvEscape(s.orderNumber);
+      if (c.key === '__product') return csvEscape(s.productOptionLabel);
       if (c.key === '__font') return csvEscape(s.fontOptionLabel);
+      if (c.key === '__color') return csvEscape(s.threadColorLabel);
       if (c.key === '__initials') return csvEscape(s.initials);
       if (c.key === '__time') return csvEscape(new Date(s.timestamp).toLocaleString());
       return csvEscape(s.values && s.values[c.key]);

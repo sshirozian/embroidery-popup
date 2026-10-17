@@ -211,6 +211,44 @@ h1 {
   margin-bottom: 8px;
 }
 
+.step-subsection {
+  margin-top: 32px;
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 8px;
+}
+
+.color-swatch {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.swatch-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid var(--border);
+  transition: border-color 0.15s, transform 0.1s;
+}
+
+.color-swatch.selected .swatch-circle {
+  border-color: var(--accent);
+  transform: scale(1.08);
+}
+
+.swatch-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
 .initials-input {
   width: 100%;
   text-align: center;
@@ -284,6 +322,9 @@ h1 {
 }
 
 @media print {
+  /* step1/step2/step3 already carry the shared .hidden class by the time
+     Print is reachable (only shown on the thank-you screen), so they don't
+     need hiding here — just the parts that are always rendered. */
   .steps, .footer-link { display: none; }
 
   html, body {
@@ -307,11 +348,13 @@ h1 {
     overflow: hidden;
   }
 
+  /* The on-screen logo (configurable, may be in color) never prints —
+     only the fixed black print-logo image does. */
   .logo-wrap { display: none; }
 
   .print-logo {
     display: block;
-    max-width: 46%;
+    max-width: 38%;
     margin: 0 auto 10px;
   }
 
@@ -328,16 +371,18 @@ h1 {
 
   .thankyou { padding: 0; line-height: 1; }
   .thankyou .big { display: none; }
-  .thankyou h1 { display: none; }
-  .thankyou .subtitle { display: none; }
+  .thankyou h1 { display: none; } /* avoid printing "Thank You!" twice — .print-footer covers it */
+  .thankyou .subtitle { display: none; } /* redundant with the big order number below it */
   .thankyou .btn-row { display: none; }
 
+  /* Force plain black-on-white output so a thermal/receipt printer doesn't
+     try to render colored fills or accent text. */
   .thankyou, .thankyou * {
     color: #000 !important;
     background: transparent !important;
     box-shadow: none !important;
   }
-  .order-number { font-size: 76px; line-height: 1; margin: 0 0 10px; }
+  .order-number { font-size: 66px; line-height: 1; margin: 0 0 8px; }
   .order-summary {
     padding: 3px 0;
     margin: 0;
@@ -347,26 +392,26 @@ h1 {
     display: flex;
     justify-content: center;
     gap: 8px;
-    font-size: 18px;
-    line-height: 1.25;
+    font-size: 16px;
+    line-height: 1.15;
     padding: 0;
     border-bottom: none;
   }
   .summary-row span::after { content: ':'; }
   .print-footer {
     display: block;
-    font-size: 22px;
+    font-size: 18px;
     line-height: 1;
     font-weight: 700;
     text-align: center;
-    margin-top: 10px;
+    margin-top: 6px;
   }
   .print-qr-heading {
     display: block;
     font-size: 18px;
     font-weight: 700;
     text-align: center;
-    margin-top: 42px;
+    margin-top: 18px;
   }
   .print-qr {
     display: block;

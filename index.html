@@ -24,26 +24,45 @@
       <div id="fieldsContainer"></div>
       <div class="error-text" id="step1Error"></div>
       <div class="btn-row">
+        <button class="btn btn-primary" id="toProduct">Next</button>
+      </div>
+    </section>
+
+    <!-- Step 2: item/product options -->
+    <section id="stepProduct" class="hidden">
+      <h1>Choose Your Item</h1>
+      <p class="subtitle">Tap an option below to select it.</p>
+      <div class="options-grid" id="productGrid"></div>
+      <div class="error-text" id="stepProductError"></div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" id="toStep1">Back</button>
         <button class="btn btn-primary" id="toStep2">Next</button>
       </div>
     </section>
 
-    <!-- Step 2: font selection -->
+    <!-- Step 3: font style + thread color -->
     <section id="step2" class="hidden">
       <h1>Choose Your Font Style</h1>
       <p class="subtitle">Tap an option below to select it.</p>
       <div class="options-grid" id="optionsGrid"></div>
+
+      <div class="step-subsection">
+        <h1>Choose a Thread Color</h1>
+        <p class="subtitle">Tap a color below to select it.</p>
+        <div class="color-grid" id="colorGrid"></div>
+      </div>
+
       <div class="error-text" id="step2Error"></div>
       <div class="btn-row">
-        <button class="btn btn-secondary" id="toStep1">Back</button>
+        <button class="btn btn-secondary" id="toProductBack">Back</button>
         <button class="btn btn-primary" id="toStep3">Next</button>
       </div>
     </section>
 
-    <!-- Step 3: initials -->
+    <!-- Step 4: name or initials -->
     <section id="step3" class="hidden">
-      <h1>Your Initials</h1>
-      <p class="subtitle" id="initialsHint">Enter up to 3 letters to be embroidered.</p>
+      <h1>Your Name or Initials</h1>
+      <p class="subtitle" id="initialsHint">Enter the name or initials to be embroidered.</p>
       <input type="text" class="initials-input" id="initialsInput" autocomplete="off" autocapitalize="characters" />
       <div class="error-text" id="step3Error"></div>
       <div class="btn-row">
@@ -52,7 +71,7 @@
       </div>
     </section>
 
-    <!-- Thank you -->
+    <!-- Step 5: print -->
     <section id="stepDone" class="hidden">
       <div class="thankyou">
         <img src="print-logo.jpg" alt="" class="print-logo" />
@@ -67,7 +86,20 @@
         <p class="print-qr-caption">Follow and stay in touch!</p>
         <div class="btn-row">
           <button class="btn btn-secondary" id="printBtn">Print Order</button>
-          <button class="btn btn-primary hidden" id="completeBtn">Complete</button>
+          <button class="btn btn-primary hidden" id="nextFromPrintBtn">Next</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 6: complete -->
+    <section id="stepComplete" class="hidden">
+      <div class="thankyou">
+        <div class="big">✓</div>
+        <h1>All Set?</h1>
+        <p class="subtitle">Make sure your receipt printed before you finish.</p>
+        <div class="btn-row">
+          <button class="btn btn-secondary" id="backToPrintBtn">Back</button>
+          <button class="btn btn-primary" id="completeBtn">Complete</button>
         </div>
       </div>
     </section>

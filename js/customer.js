@@ -1,11 +1,25 @@
 let config = null;
+let selectedProductId = null;
 let selectedOptionId = null;
+let selectedColorId = null;
 const values = {};
 let currentStep = 1;
 let lastActivity = Date.now();
 let wakeLockSentinel = null;
+let doneTimer = null;
 
-const steps = ['step1', 'step2', 'step3', 'stepDone'];
+const steps = ['step1', 'stepProduct', 'step2', 'step3', 'stepDone', 'stepComplete'];
+
+const THREAD_COLORS = [
+  { id: 'red', label: 'Red', hex: '#c0392b' },
+  { id: 'blue', label: 'Blue', hex: '#1f5fa8' },
+  { id: 'gold', label: 'Gold', hex: '#c9a227' },
+  { id: 'pink', label: 'Pink', hex: '#e0599e' },
+  { id: 'orange', label: 'Orange', hex: '#d9731e' },
+  { id: 'yellow', label: 'Yellow', hex: '#e8c93b' },
+  { id: 'white', label: 'White', hex: '#ffffff' },
+  { id: 'green', label: 'Green', hex: '#2f7d4f' },
+];
 
 function markActivity() {
   lastActivity = Date.now();
@@ -18,7 +32,7 @@ function startIdleWatcher() {
   setInterval(() => {
     const idleSeconds = config.idleResetSeconds;
     if (!idleSeconds || idleSeconds <= 0) return;
-    if (currentStep === 1 || currentStep === 4) return; // welcome / thank-you handle themselves
+    if (currentStep === 1 || currentStep === 5 || currentStep === 6) return; // welcome / print / complete handle themselves
     if (Date.now() - lastActivity > idleSeconds * 1000) {
       window.location.reload();
     }
@@ -50,8 +64,8 @@ function showStep(n) {
 function renderDots() {
   const dots = document.getElementById('stepsDots');
   dots.innerHTML = '';
-  if (currentStep > 3) return;
-  for (let i = 1; i <= 3; i++) {
+  if (currentStep > 4) return;
+  for (let i = 1; i <= 4; i++) {
     const d = document.createElement('div');
     d.className = 'step-dot' + (i === currentStep ? ' active' : i < currentStep ? ' done' : '');
     dots.appendChild(d);
@@ -88,6 +102,34 @@ function renderFields() {
   });
 }
 
+function renderProductOptions() {
+  const grid = document.getElementById('productGrid');
+  grid.innerHTML = '';
+  config.productOptions.forEach((opt) => {
+    const card = document.createElement('div');
+    card.className = 'option-card' + (opt.id === selectedProductId ? ' selected' : '');
+    card.addEventListener('click', () => {
+      selectedProductId = opt.id;
+      renderProductOptions();
+    });
+    if (opt.image) {
+      const img = document.createElement('img');
+      img.src = opt.image;
+      card.appendChild(img);
+    } else {
+      const ph = document.createElement('div');
+      ph.className = 'option-placeholder';
+      ph.textContent = 'No image';
+      card.appendChild(ph);
+    }
+    const lbl = document.createElement('div');
+    lbl.className = 'opt-label';
+    lbl.textContent = opt.label;
+    card.appendChild(lbl);
+    grid.appendChild(card);
+  });
+}
+
 function renderOptions() {
   const grid = document.getElementById('optionsGrid');
   grid.innerHTML = '';
@@ -116,6 +158,28 @@ function renderOptions() {
   });
 }
 
+function renderColorOptions() {
+  const grid = document.getElementById('colorGrid');
+  grid.innerHTML = '';
+  THREAD_COLORS.forEach((c) => {
+    const item = document.createElement('div');
+    item.className = 'color-swatch' + (c.id === selectedColorId ? ' selected' : '');
+    item.addEventListener('click', () => {
+      selectedColorId = c.id;
+      renderColorOptions();
+    });
+    const circle = document.createElement('div');
+    circle.className = 'swatch-circle';
+    circle.style.background = c.hex;
+    const lbl = document.createElement('div');
+    lbl.className = 'swatch-label';
+    lbl.textContent = c.label;
+    item.appendChild(circle);
+    item.appendChild(lbl);
+    grid.appendChild(item);
+  });
+}
+
 function validateStep1() {
   const err = document.getElementById('step1Error');
   for (const f of config.fields) {
@@ -133,10 +197,24 @@ function validateStep1() {
   return true;
 }
 
+function validateStepProduct() {
+  const err = document.getElementById('stepProductError');
+  if (!selectedProductId) {
+    err.textContent = 'Please choose one option to continue.';
+    return false;
+  }
+  err.textContent = '';
+  return true;
+}
+
 function validateStep2() {
   const err = document.getElementById('step2Error');
   if (!selectedOptionId) {
-    err.textContent = 'Please choose one option to continue.';
+    err.textContent = 'Please choose a font style to continue.';
+    return false;
+  }
+  if (!selectedColorId) {
+    err.textContent = 'Please choose a thread color to continue.';
     return false;
   }
   err.textContent = '';
@@ -147,17 +225,35 @@ function validateStep3() {
   const err = document.getElementById('step3Error');
   const val = document.getElementById('initialsInput').value.trim();
   if (!val) {
-    err.textContent = 'Please enter your initials.';
+    err.textContent = 'Please enter a name or initials.';
     return false;
   }
   err.textContent = '';
   return true;
 }
 
+function getInitialsMax() {
+  const v = config.initialsMaxLength;
+  return v === 0 ? Infinity : (v || 3);
+}
+
+function adjustInitialsFontSize() {
+  const el = document.getElementById('initialsInput');
+  const len = el.value.length;
+  let size = 48, spacing = 10;
+  if (len > 14) { size = 22; spacing = 2; }
+  else if (len > 10) { size = 28; spacing = 4; }
+  else if (len > 6) { size = 36; spacing = 6; }
+  el.style.fontSize = size + 'px';
+  el.style.letterSpacing = spacing + 'px';
+}
+
 async function submitOrder() {
   const fieldLabels = {};
   config.fields.forEach((f) => { fieldLabels[f.id] = f.label; });
-  const chosen = config.fontOptions.find((o) => o.id === selectedOptionId);
+  const chosenProduct = config.productOptions.find((o) => o.id === selectedProductId);
+  const chosenStyle = config.fontOptions.find((o) => o.id === selectedOptionId);
+  const chosenColor = THREAD_COLORS.find((c) => c.id === selectedColorId);
   const orderNumber = await getNextOrderNumber();
 
   const submission = {
@@ -165,7 +261,9 @@ async function submitOrder() {
     timestamp: new Date().toISOString(),
     values: { ...values },
     fieldLabels,
-    fontOptionLabel: chosen ? chosen.label : '',
+    productOptionLabel: chosenProduct ? chosenProduct.label : '',
+    fontOptionLabel: chosenStyle ? chosenStyle.label : '',
+    threadColorLabel: chosenColor ? chosenColor.label : '',
     initials: document.getElementById('initialsInput').value.trim().toUpperCase(),
     synced: false,
   };
@@ -173,34 +271,20 @@ async function submitOrder() {
   await addSubmission(submission);
   syncSubmission(config, submission); // fire-and-forget: never block the kiosk flow on network
   document.getElementById('orderNumberDisplay').textContent = orderNumber;
-  renderOrderSummary(values.firstName || '', values.lastName || '', submission.fontOptionLabel, submission.initials);
-  showStep(4);
-
-  const completeBtn = document.getElementById('completeBtn');
-  completeBtn.classList.add('hidden');
-  let doneTimer = null;
-
-  completeBtn.addEventListener('click', () => {
-    clearTimeout(doneTimer);
-    window.location.reload();
-  }, { once: true });
-
-  document.getElementById('printBtn').addEventListener('click', () => {
-    window.print();
-    completeBtn.classList.remove('hidden');
-    clearTimeout(doneTimer);
-    doneTimer = setTimeout(() => window.location.reload(), 30000);
-  });
+  renderOrderSummary(values.firstName || '', values.lastName || '', submission);
+  showStep(5);
 }
 
-function renderOrderSummary(firstName, lastName, styleLabel, initials) {
+function renderOrderSummary(firstName, lastName, submission) {
   const el = document.getElementById('orderSummary');
   el.innerHTML = '';
   const rows = [
     ['Name', `${firstName} ${lastName}`.trim()],
-    ['Style', styleLabel],
-    ['Initials', initials],
-  ];
+    ['Item', submission.productOptionLabel],
+    ['Style', submission.fontOptionLabel],
+    ['Color', submission.threadColorLabel],
+    ['Embroidered Text', submission.initials],
+  ].filter(([, value]) => value);
   rows.forEach(([label, value]) => {
     const row = document.createElement('div');
     row.className = 'summary-row';
@@ -214,32 +298,56 @@ function renderOrderSummary(firstName, lastName, styleLabel, initials) {
   });
 }
 
+function restartDoneTimer() {
+  clearTimeout(doneTimer);
+  doneTimer = setTimeout(() => window.location.reload(), 30000);
+}
+
 function wireNav() {
-  document.getElementById('toStep2').addEventListener('click', () => {
-    if (validateStep1()) { showStep(2); renderOptions(); }
+  document.getElementById('toProduct').addEventListener('click', () => {
+    if (validateStep1()) { showStep(2); renderProductOptions(); }
   });
   document.getElementById('toStep1').addEventListener('click', () => showStep(1));
-  document.getElementById('toStep3').addEventListener('click', () => {
-    if (validateStep2()) showStep(3);
+  document.getElementById('toStep2').addEventListener('click', () => {
+    if (validateStepProduct()) { showStep(3); renderOptions(); renderColorOptions(); }
   });
-  document.getElementById('toStep2b').addEventListener('click', () => showStep(2));
+  document.getElementById('toProductBack').addEventListener('click', () => showStep(2));
+  document.getElementById('toStep3').addEventListener('click', () => {
+    if (validateStep2()) showStep(4);
+  });
+  document.getElementById('toStep2b').addEventListener('click', () => showStep(3));
   document.getElementById('submitBtn').addEventListener('click', () => {
     if (validateStep3()) submitOrder();
   });
 
+  document.getElementById('printBtn').addEventListener('click', () => {
+    window.print();
+    document.getElementById('nextFromPrintBtn').classList.remove('hidden');
+    restartDoneTimer();
+  });
+  document.getElementById('nextFromPrintBtn').addEventListener('click', () => showStep(6));
+  document.getElementById('backToPrintBtn').addEventListener('click', () => showStep(5));
+  document.getElementById('completeBtn').addEventListener('click', () => {
+    clearTimeout(doneTimer);
+    window.location.reload();
+  });
+
   const initialsInput = document.getElementById('initialsInput');
   initialsInput.addEventListener('input', () => {
-    let v = initialsInput.value.toUpperCase().replace(/[^A-Z]/g, '');
-    const max = config.initialsMaxLength || 3;
-    if (v.length > max) v = v.slice(0, max);
+    let v = initialsInput.value.toUpperCase().replace(/[^A-Z ]/g, '');
+    const max = getInitialsMax();
+    if (isFinite(max) && v.length > max) v = v.slice(0, max);
     initialsInput.value = v;
+    adjustInitialsFontSize();
   });
 }
 
 async function init() {
   config = await getConfigOrDefault();
-  document.getElementById('initialsHint').textContent =
-    `Enter up to ${config.initialsMaxLength || 3} letters to be embroidered.`;
+  const max = getInitialsMax();
+  document.getElementById('initialsHint').textContent = isFinite(max)
+    ? `Enter up to ${max} letters to be embroidered.`
+    : 'Enter the name or initials to be embroidered.';
   // No native maxlength: it would truncate raw keystrokes (incl. stray symbols)
   // before our letters-only filter runs, which could drop a valid trailing letter.
   renderLogo();
