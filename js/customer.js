@@ -7,7 +7,6 @@ const values = {};
 let currentStep = 1;
 let lastActivity = Date.now();
 let wakeLockSentinel = null;
-let doneTimer = null;
 
 let activeSteps = [];
 
@@ -385,11 +384,6 @@ function renderOrderSummary(firstName, lastName, submission) {
   });
 }
 
-function restartDoneTimer() {
-  clearTimeout(doneTimer);
-  doneTimer = setTimeout(() => window.location.reload(), 30000);
-}
-
 function goNext() {
   const curId = activeSteps[currentStep - 1];
   const def = STEP_DEFS[curId];
@@ -420,12 +414,10 @@ function wireNav() {
   document.getElementById('printBtn').addEventListener('click', () => {
     window.print();
     document.getElementById('nextFromPrintBtn').classList.remove('hidden');
-    restartDoneTimer();
   });
   document.getElementById('nextFromPrintBtn').addEventListener('click', () => showStep(activeSteps.indexOf('stepComplete') + 1));
   document.getElementById('backToPrintBtn').addEventListener('click', () => showStep(activeSteps.indexOf('stepDone') + 1));
   document.getElementById('completeBtn').addEventListener('click', () => {
-    clearTimeout(doneTimer);
     window.location.reload();
   });
 

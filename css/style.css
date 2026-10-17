@@ -322,8 +322,10 @@ h1 {
 
 .qr-image {
   display: block;
-  width: 140px;
-  height: 140px;
+  width: 280px;
+  max-width: 80%;
+  height: auto;
+  aspect-ratio: 1 / 1;
   margin: 0 auto;
   object-fit: contain;
 }
