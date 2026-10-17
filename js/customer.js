@@ -366,8 +366,8 @@ function renderOrderSummary(firstName, lastName, submission) {
   const rows = [
     ['Name', `${firstName} ${lastName}`.trim()],
     ['Item', submission.productOptionLabel],
-    ['Style', submission.fontOptionLabel],
-    ['Color', submission.threadColorLabel],
+    ['Font Style', submission.fontOptionLabel],
+    ['Thread Color', submission.threadColorLabel],
     ['Embroidered Text', submission.initials],
     ['Payment', submission.paymentMethodLabel],
   ].filter(([, value]) => value);
