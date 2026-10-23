@@ -39,12 +39,17 @@ const PAYMENT_METHODS = [
 const THREAD_COLORS = [
   { id: 'red', label: 'Red', hex: '#c0392b' },
   { id: 'blue', label: 'Blue', hex: '#1f5fa8' },
-  { id: 'gold', label: 'Gold', hex: '#c9a227' },
-  { id: 'pink', label: 'Pink', hex: '#e0599e' },
   { id: 'orange', label: 'Orange', hex: '#d9731e' },
-  { id: 'yellow', label: 'Yellow', hex: '#e8c93b' },
-  { id: 'white', label: 'White', hex: '#ffffff' },
+  { id: 'gold', label: 'Gold', hex: '#c9a227' },
   { id: 'green', label: 'Green', hex: '#2f7d4f' },
+  { id: 'hot-pink', label: 'Hot Pink', hex: '#e6007e' },
+  { id: 'light-pink', label: 'Light Pink', hex: '#f4b6c2' },
+  { id: 'brown', label: 'Brown', hex: '#6f4e37' },
+  { id: 'maroon', label: 'Maroon', hex: '#800020' },
+  { id: 'beige', label: 'Beige', hex: '#d8c3a5' },
+  { id: 'copper', label: 'Copper', hex: '#b87333' },
+  { id: 'olive', label: 'Olive', hex: '#71772e' },
+  { id: 'brass', label: 'Brass', hex: '#b5a642' },
 ];
 
 function markActivity() {
