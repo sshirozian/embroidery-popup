@@ -36,21 +36,23 @@ const PAYMENT_METHODS = [
   { id: 'check', label: 'Check', icon: '🧾' },
 ];
 
+// Order matters: the first 6 render on row 1, the remaining 7 on row 2.
 const THREAD_COLORS = [
   { id: 'red', label: 'Red', hex: '#c0392b' },
   { id: 'blue', label: 'Blue', hex: '#1f5fa8' },
   { id: 'orange', label: 'Orange', hex: '#d9731e' },
   { id: 'gold', label: 'Gold', hex: '#c9a227' },
   { id: 'green', label: 'Green', hex: '#2f7d4f' },
+  { id: 'beige', label: 'Beige', hex: '#d8c3a5' },
   { id: 'hot-pink', label: 'Hot Pink', hex: '#e6007e' },
   { id: 'light-pink', label: 'Light Pink', hex: '#f4b6c2' },
   { id: 'brown', label: 'Brown', hex: '#6f4e37' },
   { id: 'maroon', label: 'Maroon', hex: '#800020' },
-  { id: 'beige', label: 'Beige', hex: '#d8c3a5' },
   { id: 'copper', label: 'Copper', hex: '#b87333' },
   { id: 'olive', label: 'Olive', hex: '#71772e' },
   { id: 'brass', label: 'Brass', hex: '#b5a642' },
 ];
+const THREAD_COLORS_ROW1_COUNT = 6;
 
 function markActivity() {
   lastActivity = Date.now();
@@ -195,9 +197,11 @@ function renderOptions() {
 }
 
 function renderColorOptions() {
-  const grid = document.getElementById('colorGrid');
-  grid.innerHTML = '';
-  THREAD_COLORS.forEach((c) => {
+  const top = document.getElementById('colorGridTop');
+  const bottom = document.getElementById('colorGridBottom');
+  top.innerHTML = '';
+  bottom.innerHTML = '';
+  THREAD_COLORS.forEach((c, i) => {
     const item = document.createElement('div');
     item.className = 'color-swatch' + (c.id === selectedColorId ? ' selected' : '');
     item.addEventListener('click', () => {
@@ -212,7 +216,7 @@ function renderColorOptions() {
     lbl.textContent = c.label;
     item.appendChild(circle);
     item.appendChild(lbl);
-    grid.appendChild(item);
+    (i < THREAD_COLORS_ROW1_COUNT ? top : bottom).appendChild(item);
   });
 }
 
