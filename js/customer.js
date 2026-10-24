@@ -431,7 +431,9 @@ function wireNav() {
   });
 
   const initialsInput = document.getElementById('initialsInput');
-  initialsInput.addEventListener('input', () => {
+  let isComposing = false;
+
+  function applyInitialsTransform() {
     // Open to any character (letters from any keyboard/script, numbers,
     // symbols) — only the length limit is enforced here.
     let v = initialsInput.value.toUpperCase();
@@ -439,6 +441,20 @@ function wireNav() {
     if (isFinite(max) && v.length > max) v = v.slice(0, max);
     initialsInput.value = v;
     adjustInitialsFontSize();
+  }
+
+  initialsInput.addEventListener('compositionstart', () => { isComposing = true; });
+  initialsInput.addEventListener('compositionend', () => {
+    isComposing = false;
+    applyInitialsTransform();
+  });
+  initialsInput.addEventListener('input', (e) => {
+    // Many non-Latin keyboards (incl. common Armenian layouts) build a
+    // character over multiple keystrokes via IME composition. Rewriting the
+    // field's value mid-composition can silently cancel that in-progress
+    // input, so skip the transform until composition finishes.
+    if (isComposing || e.isComposing) return;
+    applyInitialsTransform();
   });
 }
 
