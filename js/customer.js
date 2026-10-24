@@ -432,7 +432,9 @@ function wireNav() {
 
   const initialsInput = document.getElementById('initialsInput');
   initialsInput.addEventListener('input', () => {
-    let v = initialsInput.value.toUpperCase().replace(/[^A-Z ]/g, '');
+    // Open to any character (letters from any keyboard/script, numbers,
+    // symbols) — only the length limit is enforced here.
+    let v = initialsInput.value.toUpperCase();
     const max = getInitialsMax();
     if (isFinite(max) && v.length > max) v = v.slice(0, max);
     initialsInput.value = v;
@@ -445,10 +447,10 @@ async function init() {
   activeSteps = getActiveSteps();
   const max = getInitialsMax();
   document.getElementById('initialsHint').textContent = isFinite(max)
-    ? `Enter up to ${max} letters to be embroidered.`
+    ? `Enter up to ${max} characters to be embroidered.`
     : 'Enter the name or initials to be embroidered.';
-  // No native maxlength: it would truncate raw keystrokes (incl. stray symbols)
-  // before our letters-only filter runs, which could drop a valid trailing letter.
+  // No native maxlength: it would truncate raw keystrokes before our
+  // JS-based length limit runs, which could drop a valid trailing character.
   renderLogo();
   renderFields();
   wireNav();
