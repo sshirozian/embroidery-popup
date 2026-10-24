@@ -357,7 +357,7 @@ async function submitOrder() {
     productOptionLabel: chosenProduct ? chosenProduct.label : '',
     fontOptionLabel: chosenStyle ? chosenStyle.label : '',
     threadColorLabel: chosenColor ? chosenColor.label : '',
-    initials: document.getElementById('initialsInput').value.trim().toUpperCase(),
+    initials: document.getElementById('initialsInput').value.trim(),
     paymentMethodLabel: chosenPayment ? chosenPayment.label : '',
     synced: false,
   };
@@ -435,8 +435,8 @@ function wireNav() {
 
   function applyInitialsTransform() {
     // Open to any character (letters from any keyboard/script, numbers,
-    // symbols) — only the length limit is enforced here.
-    let v = initialsInput.value.toUpperCase();
+    // symbols) and any case — only the length limit is enforced here.
+    let v = initialsInput.value;
     const max = getInitialsMax();
     if (isFinite(max) && v.length > max) v = v.slice(0, max);
     initialsInput.value = v;

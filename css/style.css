@@ -356,7 +356,6 @@ h1 {
   border: 2px solid var(--border);
   border-radius: 14px;
   background: var(--bg);
-  text-transform: uppercase;
 }
 
 .initials-input:focus {
