@@ -76,8 +76,8 @@ function buildActiveSteps() {
       if (config.enabledSteps.nameInitials) seq.push({ id: 'step3', itemIndex: i });
     });
   }
-  if (config.enabledSteps.payment) seq.push({ id: 'stepPayment' });
   seq.push({ id: 'stepReview' });
+  if (config.enabledSteps.payment) seq.push({ id: 'stepPayment' });
   seq.push({ id: 'stepDone' });
   seq.push({ id: 'stepComplete' });
   return seq;
@@ -525,14 +525,52 @@ function renderOrderSummary(firstName, lastName, submission) {
 }
 
 function renderReviewSummary() {
-  const chosenPayment = PAYMENT_METHODS.find((m) => m.id === selectedPaymentMethod);
-  renderGroupedSummary(
-    document.getElementById('reviewSummary'),
-    values.firstName || '',
-    values.lastName || '',
-    buildItemsSummaryFromLineItems(),
-    chosenPayment ? chosenPayment.label : ''
-  );
+  const el = document.getElementById('reviewSummary');
+  el.innerHTML = '';
+
+  const nameRow = buildSummaryRow('Name', `${values.firstName || ''} ${values.lastName || ''}`.trim());
+  if (nameRow) el.appendChild(nameRow);
+
+  const multiple = lineItems.length > 1;
+  lineItems.forEach((li, i) => {
+    const product = config.productOptions.find((o) => o.id === li.productId);
+    const style = config.fontOptions.find((o) => o.id === li.fontOptionId);
+    const color = THREAD_COLORS.find((c) => c.id === li.colorId);
+
+    const card = document.createElement('div');
+    card.className = 'review-item';
+
+    if (product && product.image) {
+      const img = document.createElement('img');
+      img.className = 'review-item-image';
+      img.src = product.image;
+      card.appendChild(img);
+    } else {
+      const ph = document.createElement('div');
+      ph.className = 'review-item-placeholder';
+      ph.textContent = 'No image';
+      card.appendChild(ph);
+    }
+
+    const body = document.createElement('div');
+    body.className = 'review-item-body';
+    const title = document.createElement('div');
+    title.className = 'review-item-title';
+    title.textContent = multiple
+      ? `Item ${i + 1}${product ? ': ' + product.label : ''}`
+      : (product ? product.label : 'Item');
+    body.appendChild(title);
+
+    const styleRow = buildSummaryRow('Font Style', style ? style.label : '');
+    if (styleRow) body.appendChild(styleRow);
+    const colorRow = buildSummaryRow('Thread Color', color ? color.label : '');
+    if (colorRow) body.appendChild(colorRow);
+    const textRow = buildSummaryRow('Embroidered Text', li.initials || '');
+    if (textRow) body.appendChild(textRow);
+
+    card.appendChild(body);
+    el.appendChild(card);
+  });
 }
 
 function goNext() {

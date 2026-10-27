@@ -262,6 +262,53 @@ h1 {
   margin-top: 0;
 }
 
+.review-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin: 16px 0;
+  text-align: left;
+}
+
+.review-item:first-of-type {
+  margin-top: 8px;
+}
+
+.review-item-image {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.review-item-placeholder {
+  width: 70px;
+  height: 70px;
+  background: #fff;
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 10px;
+  text-align: center;
+  padding: 4px;
+}
+
+.review-item-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.review-item-title {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+
 .step-subsection {
   margin-top: 32px;
 }
