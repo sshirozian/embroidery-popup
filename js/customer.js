@@ -34,7 +34,7 @@ const THREAD_COLORS = [
 ];
 const THREAD_COLORS_ROW1_COUNT = 6;
 
-const ALL_STEP_IDS = ['step1', 'stepProduct', 'step2', 'step3', 'stepPayment', 'stepDone', 'stepComplete'];
+const ALL_STEP_IDS = ['step1', 'stepProduct', 'step2', 'step3', 'stepPayment', 'stepReview', 'stepDone', 'stepComplete'];
 
 // step2/step3 repeat once per entry in lineItems, so they carry onEnter hooks
 // that point currentPersonalizingIndex at the right item before rendering.
@@ -63,6 +63,7 @@ const STEP_DEFS = {
     },
   },
   stepPayment: { validate: () => validateStepPayment(), onEnter: () => renderPaymentOptions() },
+  stepReview: { onEnter: () => renderReviewSummary() },
 };
 
 function buildActiveSteps() {
@@ -76,6 +77,7 @@ function buildActiveSteps() {
     });
   }
   if (config.enabledSteps.payment) seq.push({ id: 'stepPayment' });
+  seq.push({ id: 'stepReview' });
   seq.push({ id: 'stepDone' });
   seq.push({ id: 'stepComplete' });
   return seq;
@@ -431,13 +433,8 @@ function adjustInitialsFontSize() {
   el.style.letterSpacing = spacing + 'px';
 }
 
-async function submitOrder() {
-  const fieldLabels = {};
-  config.fields.forEach((f) => { fieldLabels[f.id] = f.label; });
-  const chosenPayment = PAYMENT_METHODS.find((m) => m.id === selectedPaymentMethod);
-  const orderNumber = await getNextOrderNumber();
-
-  const items = lineItems.map((li) => {
+function buildItemsSummaryFromLineItems() {
+  return lineItems.map((li) => {
     const product = config.productOptions.find((o) => o.id === li.productId);
     const style = config.fontOptions.find((o) => o.id === li.fontOptionId);
     const color = THREAD_COLORS.find((c) => c.id === li.colorId);
@@ -448,6 +445,14 @@ async function submitOrder() {
       initials: li.initials || '',
     };
   });
+}
+
+async function submitOrder() {
+  const fieldLabels = {};
+  config.fields.forEach((f) => { fieldLabels[f.id] = f.label; });
+  const chosenPayment = PAYMENT_METHODS.find((m) => m.id === selectedPaymentMethod);
+  const orderNumber = await getNextOrderNumber();
+  const items = buildItemsSummaryFromLineItems();
 
   const submission = {
     orderNumber,
@@ -479,16 +484,8 @@ function buildSummaryRow(label, value) {
   return row;
 }
 
-function renderOrderSummary(firstName, lastName, submission) {
-  const el = document.getElementById('orderSummary');
+function renderGroupedSummary(el, firstName, lastName, items, paymentMethodLabel) {
   el.innerHTML = '';
-
-  const items = submission.items || [];
-  // A fixed-size receipt can't use single-item sizing once there are
-  // several items to list — shrink proportionally so it still fits one page.
-  const card = document.querySelector('.card');
-  card.classList.toggle('receipt-compact', items.length >= 2);
-  card.classList.toggle('receipt-tight', items.length >= 4);
 
   const nameRow = buildSummaryRow('Name', `${firstName} ${lastName}`.trim());
   if (nameRow) el.appendChild(nameRow);
@@ -512,8 +509,30 @@ function renderOrderSummary(firstName, lastName, submission) {
     if (textRow) el.appendChild(textRow);
   });
 
-  const paymentRow = buildSummaryRow('Payment', submission.paymentMethodLabel);
+  const paymentRow = buildSummaryRow('Payment', paymentMethodLabel);
   if (paymentRow) el.appendChild(paymentRow);
+}
+
+function renderOrderSummary(firstName, lastName, submission) {
+  const items = submission.items || [];
+  // A fixed-size receipt can't use single-item sizing once there are
+  // several items to list — shrink proportionally so it still fits one page.
+  const card = document.querySelector('.card');
+  card.classList.toggle('receipt-compact', items.length >= 2);
+  card.classList.toggle('receipt-tight', items.length >= 4);
+
+  renderGroupedSummary(document.getElementById('orderSummary'), firstName, lastName, items, submission.paymentMethodLabel);
+}
+
+function renderReviewSummary() {
+  const chosenPayment = PAYMENT_METHODS.find((m) => m.id === selectedPaymentMethod);
+  renderGroupedSummary(
+    document.getElementById('reviewSummary'),
+    values.firstName || '',
+    values.lastName || '',
+    buildItemsSummaryFromLineItems(),
+    chosenPayment ? chosenPayment.label : ''
+  );
 }
 
 function goNext() {
@@ -540,10 +559,10 @@ function goBack() {
 }
 
 function wireNav() {
-  ['toProduct', 'toStep2', 'toStep3', 'submitBtn', 'paymentNextBtn'].forEach((id) => {
+  ['toProduct', 'toStep2', 'toStep3', 'submitBtn', 'paymentNextBtn', 'reviewNextBtn'].forEach((id) => {
     document.getElementById(id).addEventListener('click', goNext);
   });
-  ['toStep1', 'toProductBack', 'toStep2b', 'paymentBackBtn'].forEach((id) => {
+  ['toStep1', 'toProductBack', 'toStep2b', 'paymentBackBtn', 'reviewBackBtn'].forEach((id) => {
     document.getElementById(id).addEventListener('click', goBack);
   });
 
