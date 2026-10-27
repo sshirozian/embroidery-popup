@@ -211,6 +211,57 @@ h1 {
   margin-bottom: 8px;
 }
 
+.qty-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.qty-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  background: var(--surface);
+  color: var(--accent);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.qty-value {
+  font-size: 18px;
+  font-weight: 700;
+  min-width: 24px;
+  text-align: center;
+}
+
+.item-progress {
+  text-align: center;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 14px;
+  margin: -4px 0 14px;
+}
+
+.summary-item-heading {
+  font-weight: 700;
+  font-size: 15px;
+  text-align: center;
+  margin: 14px 0 4px;
+}
+
+.summary-item-heading:first-child {
+  margin-top: 0;
+}
+
 .step-subsection {
   margin-top: 32px;
 }
@@ -494,6 +545,11 @@ h1 {
     border-bottom: none;
   }
   .summary-row span::after { content: ':'; }
+  .summary-item-heading {
+    font-size: 15px;
+    line-height: 1.2;
+    margin: 8px 0 2px;
+  }
   .print-footer {
     display: block;
     font-size: 18px;
@@ -521,6 +577,27 @@ h1 {
     text-align: center;
     margin-top: 6px;
   }
+
+  /* Multi-item orders add several rows per extra item, which a fixed 4x6
+     page can't absorb at single-item sizing — shrink proportionally so
+     orders with a few items still land on one page. */
+  .receipt-compact .print-logo { max-width: 28%; margin-bottom: 6px; }
+  .receipt-compact .order-number { font-size: 48px; margin: 0 0 4px; }
+  .receipt-compact .summary-row { font-size: 12px; line-height: 1.05; }
+  .receipt-compact .summary-item-heading { font-size: 13px; margin: 5px 0 1px; }
+  .receipt-compact .print-footer { font-size: 15px; margin-top: 3px; }
+  .receipt-compact .print-qr-heading { font-size: 15px; margin-top: 6px; }
+  .receipt-compact .print-qr { width: 90px; height: 90px; margin-top: 6px; }
+  .receipt-compact .print-qr-caption { font-size: 12px; margin-top: 4px; }
+
+  .receipt-tight .print-logo { max-width: 22%; margin-bottom: 4px; }
+  .receipt-tight .order-number { font-size: 36px; margin: 0 0 2px; }
+  .receipt-tight .summary-row { font-size: 10px; line-height: 1; }
+  .receipt-tight .summary-item-heading { font-size: 11px; margin: 3px 0 1px; }
+  .receipt-tight .print-footer { font-size: 13px; margin-top: 2px; }
+  .receipt-tight .print-qr-heading { font-size: 13px; margin-top: 4px; }
+  .receipt-tight .print-qr { width: 70px; height: 70px; margin-top: 4px; }
+  .receipt-tight .print-qr-caption { font-size: 10px; margin-top: 2px; }
 }
 
 .footer-link {

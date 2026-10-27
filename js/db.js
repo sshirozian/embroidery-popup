@@ -241,10 +241,7 @@ async function syncSubmission(cfg, sub) {
       orderNumber: sub.orderNumber,
       timestamp: sub.timestamp,
       fields: cfg.fields.map((f) => ({ label: f.label, value: (sub.values && sub.values[f.id]) || '' })),
-      productLabel: sub.productOptionLabel,
-      styleLabel: sub.fontOptionLabel,
-      threadColor: sub.threadColorLabel,
-      initials: sub.initials,
+      items: sub.items || [],
       paymentMethod: sub.paymentMethodLabel,
     };
     const res = await fetch(cfg.sheetWebAppUrl, {

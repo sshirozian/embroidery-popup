@@ -368,6 +368,30 @@ async function loadSubmissions() {
   renderSubsTable(subs);
 }
 
+// Submissions saved before multi-item orders existed have flat
+// productOptionLabel/fontOptionLabel/threadColorLabel/initials fields
+// instead of an items array — normalize both shapes to one list here.
+function getSubmissionItems(s) {
+  if (Array.isArray(s.items)) return s.items;
+  if (s.productOptionLabel || s.fontOptionLabel || s.threadColorLabel || s.initials) {
+    return [{
+      productLabel: s.productOptionLabel || '',
+      fontOptionLabel: s.fontOptionLabel || '',
+      threadColorLabel: s.threadColorLabel || '',
+      initials: s.initials || '',
+    }];
+  }
+  return [];
+}
+
+function formatItemsSummary(items) {
+  if (!items.length) return '';
+  return items.map((it) => {
+    const details = [it.fontOptionLabel, it.threadColorLabel, it.initials].filter(Boolean).join(', ');
+    return it.productLabel + (details ? ` (${details})` : '');
+  }).join('; ');
+}
+
 function buildColumns(subs) {
   const cols = [{ key: '__order', label: 'Order #' }];
   const seen = new Set();
@@ -376,10 +400,7 @@ function buildColumns(subs) {
       if (!seen.has(fid)) { seen.add(fid); cols.push({ key: fid, label: s.fieldLabels[fid] }); }
     });
   });
-  cols.push({ key: '__product', label: 'Item' });
-  cols.push({ key: '__font', label: 'Style Chosen' });
-  cols.push({ key: '__color', label: 'Thread Color' });
-  cols.push({ key: '__initials', label: 'Name / Initials' });
+  cols.push({ key: '__items', label: 'Items' });
   cols.push({ key: '__payment', label: 'Payment Method' });
   cols.push({ key: '__time', label: 'Submitted At' });
   if (config.sheetWebAppUrl) cols.push({ key: '__synced', label: 'Synced' });
@@ -415,10 +436,7 @@ function renderSubsTable(subs) {
     cols.forEach((c) => {
       const td = document.createElement('td');
       if (c.key === '__order') td.textContent = s.orderNumber ?? '';
-      else if (c.key === '__product') td.textContent = s.productOptionLabel || '';
-      else if (c.key === '__font') td.textContent = s.fontOptionLabel || '';
-      else if (c.key === '__color') td.textContent = s.threadColorLabel || '';
-      else if (c.key === '__initials') td.textContent = s.initials || '';
+      else if (c.key === '__items') td.textContent = formatItemsSummary(getSubmissionItems(s));
       else if (c.key === '__payment') td.textContent = s.paymentMethodLabel || '';
       else if (c.key === '__time') td.textContent = new Date(s.timestamp).toLocaleString();
       else if (c.key === '__synced') td.textContent = s.synced ? '✓' : '—';
@@ -459,10 +477,7 @@ async function exportCsv() {
   subs.forEach((s) => {
     const row = cols.map((c) => {
       if (c.key === '__order') return csvEscape(s.orderNumber);
-      if (c.key === '__product') return csvEscape(s.productOptionLabel);
-      if (c.key === '__font') return csvEscape(s.fontOptionLabel);
-      if (c.key === '__color') return csvEscape(s.threadColorLabel);
-      if (c.key === '__initials') return csvEscape(s.initials);
+      if (c.key === '__items') return csvEscape(formatItemsSummary(getSubmissionItems(s)));
       if (c.key === '__payment') return csvEscape(s.paymentMethodLabel);
       if (c.key === '__time') return csvEscape(new Date(s.timestamp).toLocaleString());
       return csvEscape(s.values && s.values[c.key]);

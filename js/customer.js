@@ -1,34 +1,14 @@
 let config = null;
-let selectedProductId = null;
-let selectedOptionId = null;
-let selectedColorId = null;
+let cartQuantities = {}; // productId -> quantity chosen on the item-selection page
+let lineItems = []; // one entry per unit purchased, each personalized independently
+let currentPersonalizingIndex = null; // which lineItems[] entry step2/step3 currently show
 let selectedPaymentMethod = null;
 const values = {};
 let currentStep = 1;
 let lastActivity = Date.now();
 let wakeLockSentinel = null;
 
-let activeSteps = [];
-
-const STEP_DEFS = {
-  step1: { validate: () => validateStep1() },
-  stepProduct: { validate: () => validateStepProduct(), onEnter: () => renderProductOptions() },
-  step2: { validate: () => validateStep2(), onEnter: () => { renderOptions(); renderColorOptions(); } },
-  step3: { validate: () => validateStep3() },
-  stepPayment: { validate: () => validateStepPayment(), onEnter: () => renderPaymentOptions() },
-};
-
-function getActiveSteps() {
-  const seq = [];
-  if (config.enabledSteps.customerInfo) seq.push('step1');
-  if (config.enabledSteps.itemOptions) seq.push('stepProduct');
-  if (config.enabledSteps.fontStyle) seq.push('step2');
-  if (config.enabledSteps.nameInitials) seq.push('step3');
-  if (config.enabledSteps.payment) seq.push('stepPayment');
-  seq.push('stepDone');
-  seq.push('stepComplete');
-  return seq;
-}
+let activeSteps = []; // array of { id, itemIndex? } descriptors
 
 const PAYMENT_METHODS = [
   { id: 'venmo', label: 'Venmo', icon: '📲' },
@@ -54,6 +34,68 @@ const THREAD_COLORS = [
 ];
 const THREAD_COLORS_ROW1_COUNT = 6;
 
+const ALL_STEP_IDS = ['step1', 'stepProduct', 'step2', 'step3', 'stepPayment', 'stepDone', 'stepComplete'];
+
+// step2/step3 repeat once per entry in lineItems, so they carry onEnter hooks
+// that point currentPersonalizingIndex at the right item before rendering.
+const STEP_DEFS = {
+  step1: { validate: () => validateStep1() },
+  stepProduct: {
+    validate: () => validateStepProduct(),
+    onEnter: () => renderProductOptions(),
+    onLeave: () => buildLineItemsFromCart(),
+  },
+  step2: {
+    validate: () => validateStep2(),
+    onEnter: (d) => {
+      currentPersonalizingIndex = d.itemIndex;
+      renderOptions();
+      renderColorOptions();
+      updateItemProgressLabels();
+    },
+  },
+  step3: {
+    validate: () => validateStep3(),
+    onEnter: (d) => {
+      currentPersonalizingIndex = d.itemIndex;
+      loadInitialsForCurrentItem();
+      updateItemProgressLabels();
+    },
+  },
+  stepPayment: { validate: () => validateStepPayment(), onEnter: () => renderPaymentOptions() },
+};
+
+function buildActiveSteps() {
+  const seq = [];
+  if (config.enabledSteps.customerInfo) seq.push({ id: 'step1' });
+  if (config.enabledSteps.itemOptions) seq.push({ id: 'stepProduct' });
+  if (config.enabledSteps.fontStyle || config.enabledSteps.nameInitials) {
+    lineItems.forEach((item, i) => {
+      if (config.enabledSteps.fontStyle) seq.push({ id: 'step2', itemIndex: i });
+      if (config.enabledSteps.nameInitials) seq.push({ id: 'step3', itemIndex: i });
+    });
+  }
+  if (config.enabledSteps.payment) seq.push({ id: 'stepPayment' });
+  seq.push({ id: 'stepDone' });
+  seq.push({ id: 'stepComplete' });
+  return seq;
+}
+
+function findStepIndex(id) {
+  return activeSteps.findIndex((d) => d.id === id);
+}
+
+function buildLineItemsFromCart() {
+  lineItems = [];
+  config.productOptions.forEach((opt) => {
+    const qty = cartQuantities[opt.id] || 0;
+    for (let i = 0; i < qty; i++) {
+      lineItems.push({ productId: opt.id, fontOptionId: null, colorId: null, initials: '' });
+    }
+  });
+  activeSteps = buildActiveSteps();
+}
+
 function markActivity() {
   lastActivity = Date.now();
 }
@@ -65,7 +107,7 @@ function startIdleWatcher() {
   setInterval(() => {
     const idleSeconds = config.idleResetSeconds;
     if (!idleSeconds || idleSeconds <= 0) return;
-    const stepId = activeSteps[currentStep - 1];
+    const stepId = activeSteps[currentStep - 1] && activeSteps[currentStep - 1].id;
     if (currentStep === 1 || stepId === 'stepDone' || stepId === 'stepComplete') return; // welcome / print / complete handle themselves
     if (Date.now() - lastActivity > idleSeconds * 1000) {
       window.location.reload();
@@ -87,11 +129,9 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible') requestWakeLock();
 });
 
-const ALL_STEP_IDS = ['step1', 'stepProduct', 'step2', 'step3', 'stepPayment', 'stepDone', 'stepComplete'];
-
 function showStep(n) {
   currentStep = n;
-  const activeId = activeSteps[n - 1];
+  const activeId = activeSteps[n - 1] && activeSteps[n - 1].id;
   ALL_STEP_IDS.forEach((id) => {
     document.getElementById(id).classList.toggle('hidden', id !== activeId);
   });
@@ -144,12 +184,10 @@ function renderProductOptions() {
   const grid = document.getElementById('productGrid');
   grid.innerHTML = '';
   config.productOptions.forEach((opt) => {
+    const qty = cartQuantities[opt.id] || 0;
     const card = document.createElement('div');
-    card.className = 'option-card' + (opt.id === selectedProductId ? ' selected' : '');
-    card.addEventListener('click', () => {
-      selectedProductId = opt.id;
-      renderProductOptions();
-    });
+    card.className = 'option-card qty-card' + (qty > 0 ? ' selected' : '');
+
     if (opt.image) {
       const img = document.createElement('img');
       img.src = opt.image;
@@ -164,6 +202,33 @@ function renderProductOptions() {
     lbl.className = 'opt-label';
     lbl.textContent = opt.label;
     card.appendChild(lbl);
+
+    const stepper = document.createElement('div');
+    stepper.className = 'qty-stepper';
+    const decBtn = document.createElement('button');
+    decBtn.type = 'button';
+    decBtn.className = 'qty-btn';
+    decBtn.textContent = '−';
+    decBtn.addEventListener('click', () => {
+      cartQuantities[opt.id] = Math.max(0, (cartQuantities[opt.id] || 0) - 1);
+      renderProductOptions();
+    });
+    const qtyValue = document.createElement('span');
+    qtyValue.className = 'qty-value';
+    qtyValue.textContent = String(qty);
+    const incBtn = document.createElement('button');
+    incBtn.type = 'button';
+    incBtn.className = 'qty-btn';
+    incBtn.textContent = '+';
+    incBtn.addEventListener('click', () => {
+      cartQuantities[opt.id] = (cartQuantities[opt.id] || 0) + 1;
+      renderProductOptions();
+    });
+    stepper.appendChild(decBtn);
+    stepper.appendChild(qtyValue);
+    stepper.appendChild(incBtn);
+    card.appendChild(stepper);
+
     grid.appendChild(card);
   });
 }
@@ -171,11 +236,12 @@ function renderProductOptions() {
 function renderOptions() {
   const grid = document.getElementById('optionsGrid');
   grid.innerHTML = '';
+  const item = lineItems[currentPersonalizingIndex];
   config.fontOptions.forEach((opt) => {
     const card = document.createElement('div');
-    card.className = 'option-card' + (opt.id === selectedOptionId ? ' selected' : '');
+    card.className = 'option-card' + (item && opt.id === item.fontOptionId ? ' selected' : '');
     card.addEventListener('click', () => {
-      selectedOptionId = opt.id;
+      lineItems[currentPersonalizingIndex].fontOptionId = opt.id;
       renderOptions();
     });
     if (opt.image) {
@@ -201,11 +267,12 @@ function renderColorOptions() {
   const bottom = document.getElementById('colorGridBottom');
   top.innerHTML = '';
   bottom.innerHTML = '';
+  const item = lineItems[currentPersonalizingIndex];
   THREAD_COLORS.forEach((c, i) => {
-    const item = document.createElement('div');
-    item.className = 'color-swatch' + (c.id === selectedColorId ? ' selected' : '');
-    item.addEventListener('click', () => {
-      selectedColorId = c.id;
+    const el = document.createElement('div');
+    el.className = 'color-swatch' + (item && c.id === item.colorId ? ' selected' : '');
+    el.addEventListener('click', () => {
+      lineItems[currentPersonalizingIndex].colorId = c.id;
       renderColorOptions();
     });
     const circle = document.createElement('div');
@@ -214,10 +281,32 @@ function renderColorOptions() {
     const lbl = document.createElement('div');
     lbl.className = 'swatch-label';
     lbl.textContent = c.label;
-    item.appendChild(circle);
-    item.appendChild(lbl);
-    (i < THREAD_COLORS_ROW1_COUNT ? top : bottom).appendChild(item);
+    el.appendChild(circle);
+    el.appendChild(lbl);
+    (i < THREAD_COLORS_ROW1_COUNT ? top : bottom).appendChild(el);
   });
+}
+
+function updateItemProgressLabels() {
+  const item = lineItems[currentPersonalizingIndex];
+  let text = '';
+  if (item) {
+    const product = config.productOptions.find((o) => o.id === item.productId);
+    text = lineItems.length > 1
+      ? `Item ${currentPersonalizingIndex + 1} of ${lineItems.length}${product ? ': ' + product.label : ''}`
+      : (product ? product.label : '');
+  }
+  const el2 = document.getElementById('step2ItemProgress');
+  const el3 = document.getElementById('step3ItemProgress');
+  if (el2) el2.textContent = text;
+  if (el3) el3.textContent = text;
+}
+
+function loadInitialsForCurrentItem() {
+  const item = lineItems[currentPersonalizingIndex];
+  const input = document.getElementById('initialsInput');
+  input.value = item ? item.initials : '';
+  adjustInitialsFontSize();
 }
 
 function renderPaymentOptions() {
@@ -281,8 +370,9 @@ function validateStep1() {
 
 function validateStepProduct() {
   const err = document.getElementById('stepProductError');
-  if (!selectedProductId) {
-    err.textContent = 'Please choose one option to continue.';
+  const total = Object.values(cartQuantities).reduce((a, b) => a + b, 0);
+  if (total === 0) {
+    err.textContent = 'Please select at least one item to continue.';
     return false;
   }
   err.textContent = '';
@@ -291,11 +381,12 @@ function validateStepProduct() {
 
 function validateStep2() {
   const err = document.getElementById('step2Error');
-  if (!selectedOptionId) {
+  const item = lineItems[currentPersonalizingIndex];
+  if (!item || !item.fontOptionId) {
     err.textContent = 'Please choose a font style to continue.';
     return false;
   }
-  if (!selectedColorId) {
+  if (!item.colorId) {
     err.textContent = 'Please choose a thread color to continue.';
     return false;
   }
@@ -343,21 +434,27 @@ function adjustInitialsFontSize() {
 async function submitOrder() {
   const fieldLabels = {};
   config.fields.forEach((f) => { fieldLabels[f.id] = f.label; });
-  const chosenProduct = config.productOptions.find((o) => o.id === selectedProductId);
-  const chosenStyle = config.fontOptions.find((o) => o.id === selectedOptionId);
-  const chosenColor = THREAD_COLORS.find((c) => c.id === selectedColorId);
   const chosenPayment = PAYMENT_METHODS.find((m) => m.id === selectedPaymentMethod);
   const orderNumber = await getNextOrderNumber();
+
+  const items = lineItems.map((li) => {
+    const product = config.productOptions.find((o) => o.id === li.productId);
+    const style = config.fontOptions.find((o) => o.id === li.fontOptionId);
+    const color = THREAD_COLORS.find((c) => c.id === li.colorId);
+    return {
+      productLabel: product ? product.label : '',
+      fontOptionLabel: style ? style.label : '',
+      threadColorLabel: color ? color.label : '',
+      initials: li.initials || '',
+    };
+  });
 
   const submission = {
     orderNumber,
     timestamp: new Date().toISOString(),
     values: { ...values },
     fieldLabels,
-    productOptionLabel: chosenProduct ? chosenProduct.label : '',
-    fontOptionLabel: chosenStyle ? chosenStyle.label : '',
-    threadColorLabel: chosenColor ? chosenColor.label : '',
-    initials: document.getElementById('initialsInput').value.trim(),
+    items,
     paymentMethodLabel: chosenPayment ? chosenPayment.label : '',
     synced: false,
   };
@@ -366,50 +463,80 @@ async function submitOrder() {
   syncSubmission(config, submission); // fire-and-forget: never block the kiosk flow on network
   document.getElementById('orderNumberDisplay').textContent = orderNumber;
   renderOrderSummary(values.firstName || '', values.lastName || '', submission);
-  showStep(activeSteps.indexOf('stepDone') + 1);
+  showStep(findStepIndex('stepDone') + 1);
+}
+
+function buildSummaryRow(label, value) {
+  if (!value) return null;
+  const row = document.createElement('div');
+  row.className = 'summary-row';
+  const l = document.createElement('span');
+  l.textContent = label;
+  const v = document.createElement('strong');
+  v.textContent = value;
+  row.appendChild(l);
+  row.appendChild(v);
+  return row;
 }
 
 function renderOrderSummary(firstName, lastName, submission) {
   const el = document.getElementById('orderSummary');
   el.innerHTML = '';
-  const rows = [
-    ['Name', `${firstName} ${lastName}`.trim()],
-    ['Item', submission.productOptionLabel],
-    ['Font Style', submission.fontOptionLabel],
-    ['Thread Color', submission.threadColorLabel],
-    ['Embroidered Text', submission.initials],
-    ['Payment', submission.paymentMethodLabel],
-  ].filter(([, value]) => value);
-  rows.forEach(([label, value]) => {
-    const row = document.createElement('div');
-    row.className = 'summary-row';
-    const l = document.createElement('span');
-    l.textContent = label;
-    const v = document.createElement('strong');
-    v.textContent = value;
-    row.appendChild(l);
-    row.appendChild(v);
-    el.appendChild(row);
+
+  const items = submission.items || [];
+  // A fixed-size receipt can't use single-item sizing once there are
+  // several items to list — shrink proportionally so it still fits one page.
+  const card = document.querySelector('.card');
+  card.classList.toggle('receipt-compact', items.length >= 2);
+  card.classList.toggle('receipt-tight', items.length >= 4);
+
+  const nameRow = buildSummaryRow('Name', `${firstName} ${lastName}`.trim());
+  if (nameRow) el.appendChild(nameRow);
+
+  const multiple = items.length > 1;
+  items.forEach((item, i) => {
+    if (multiple) {
+      const heading = document.createElement('div');
+      heading.className = 'summary-item-heading';
+      heading.textContent = `Item ${i + 1}${item.productLabel ? ': ' + item.productLabel : ''}`;
+      el.appendChild(heading);
+    } else {
+      const itemRow = buildSummaryRow('Item', item.productLabel);
+      if (itemRow) el.appendChild(itemRow);
+    }
+    const styleRow = buildSummaryRow('Font Style', item.fontOptionLabel);
+    if (styleRow) el.appendChild(styleRow);
+    const colorRow = buildSummaryRow('Thread Color', item.threadColorLabel);
+    if (colorRow) el.appendChild(colorRow);
+    const textRow = buildSummaryRow('Embroidered Text', item.initials);
+    if (textRow) el.appendChild(textRow);
   });
+
+  const paymentRow = buildSummaryRow('Payment', submission.paymentMethodLabel);
+  if (paymentRow) el.appendChild(paymentRow);
 }
 
 function goNext() {
-  const curId = activeSteps[currentStep - 1];
-  const def = STEP_DEFS[curId];
-  if (def && def.validate && !def.validate()) return;
+  const curDescriptor = activeSteps[currentStep - 1];
+  const def = STEP_DEFS[curDescriptor.id];
+  if (def && def.validate && !def.validate(curDescriptor)) return;
+  if (def && def.onLeave) def.onLeave(curDescriptor);
 
-  const nextId = activeSteps[currentStep]; // currentStep is 1-based, so this is index of the next step
-  if (nextId === 'stepDone') {
+  const nextDescriptor = activeSteps[currentStep]; // currentStep is 1-based, so this is the next entry
+  if (nextDescriptor.id === 'stepDone') {
     submitOrder();
     return;
   }
   showStep(currentStep + 1);
-  const nextDef = STEP_DEFS[nextId];
-  if (nextDef && nextDef.onEnter) nextDef.onEnter();
+  const nextDef = STEP_DEFS[nextDescriptor.id];
+  if (nextDef && nextDef.onEnter) nextDef.onEnter(nextDescriptor);
 }
 
 function goBack() {
   showStep(currentStep - 1);
+  const descriptor = activeSteps[currentStep - 1];
+  const def = STEP_DEFS[descriptor.id];
+  if (def && def.onEnter) def.onEnter(descriptor);
 }
 
 function wireNav() {
@@ -424,8 +551,8 @@ function wireNav() {
     window.print();
     document.getElementById('nextFromPrintBtn').classList.remove('hidden');
   });
-  document.getElementById('nextFromPrintBtn').addEventListener('click', () => showStep(activeSteps.indexOf('stepComplete') + 1));
-  document.getElementById('backToPrintBtn').addEventListener('click', () => showStep(activeSteps.indexOf('stepDone') + 1));
+  document.getElementById('nextFromPrintBtn').addEventListener('click', () => showStep(findStepIndex('stepComplete') + 1));
+  document.getElementById('backToPrintBtn').addEventListener('click', () => showStep(findStepIndex('stepDone') + 1));
   document.getElementById('completeBtn').addEventListener('click', () => {
     window.location.reload();
   });
@@ -440,6 +567,7 @@ function wireNav() {
     const max = getInitialsMax();
     if (isFinite(max) && v.length > max) v = v.slice(0, max);
     initialsInput.value = v;
+    if (lineItems[currentPersonalizingIndex]) lineItems[currentPersonalizingIndex].initials = v;
     adjustInitialsFontSize();
   }
 
@@ -460,7 +588,11 @@ function wireNav() {
 
 async function init() {
   config = await getConfigOrDefault();
-  activeSteps = getActiveSteps();
+  if (!config.enabledSteps.itemOptions) {
+    // No item-selection page means there's implicitly exactly one item to personalize.
+    lineItems = [{ productId: null, fontOptionId: null, colorId: null, initials: '' }];
+  }
+  activeSteps = buildActiveSteps();
   const max = getInitialsMax();
   document.getElementById('initialsHint').textContent = isFinite(max)
     ? `Enter up to ${max} characters to be embroidered.`
@@ -471,8 +603,9 @@ async function init() {
   renderFields();
   wireNav();
   showStep(1);
-  const firstDef = STEP_DEFS[activeSteps[0]];
-  if (firstDef && firstDef.onEnter) firstDef.onEnter();
+  const firstDescriptor = activeSteps[0];
+  const firstDef = STEP_DEFS[firstDescriptor.id];
+  if (firstDef && firstDef.onEnter) firstDef.onEnter(firstDescriptor);
   startIdleWatcher();
   requestWakeLock();
   retryPendingSyncs(config); // fire-and-forget: catches up any orders missed while offline

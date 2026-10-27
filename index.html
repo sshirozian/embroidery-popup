@@ -30,8 +30,8 @@
 
     <!-- Step 2: item/product options -->
     <section id="stepProduct" class="hidden">
-      <h1>Choose Your Item</h1>
-      <p class="subtitle">Tap an option below to select it.</p>
+      <h1>Choose Your Items</h1>
+      <p class="subtitle">Use the + and - buttons to choose how many of each you'd like.</p>
       <div class="options-grid" id="productGrid"></div>
       <div class="error-text" id="stepProductError"></div>
       <div class="btn-row">
@@ -40,9 +40,10 @@
       </div>
     </section>
 
-    <!-- Step 3: font style + thread color -->
+    <!-- Step 3: font style + thread color (repeats once per item) -->
     <section id="step2" class="hidden">
       <h1>Choose Your Font Style</h1>
+      <p class="item-progress" id="step2ItemProgress"></p>
       <p class="subtitle">Tap an option below to select it.</p>
       <div class="options-grid" id="optionsGrid"></div>
 
@@ -60,9 +61,10 @@
       </div>
     </section>
 
-    <!-- Step 4: name or initials -->
+    <!-- Step 4: name or initials (repeats once per item) -->
     <section id="step3" class="hidden">
       <h1>Your Name or Initials</h1>
+      <p class="item-progress" id="step3ItemProgress"></p>
       <p class="subtitle" id="initialsHint">Enter the name or initials to be embroidered.</p>
       <input type="text" class="initials-input" id="initialsInput" autocomplete="off" autocapitalize="off" />
       <div class="error-text" id="step3Error"></div>
