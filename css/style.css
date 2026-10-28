@@ -162,10 +162,15 @@ h1 {
 .btn-row .btn { flex: 1; }
 
 .options-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 16px;
   margin-bottom: 8px;
+}
+
+.options-grid .option-card {
+  flex: 0 1 calc(50% - 8px);
 }
 
 .option-card {
