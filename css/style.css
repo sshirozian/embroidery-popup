@@ -570,7 +570,7 @@ h1 {
 
   .print-logo {
     display: block;
-    max-width: 40%;
+    max-width: 41%;
     margin: 0 auto 10px;
   }
 
@@ -598,7 +598,7 @@ h1 {
     background: transparent !important;
     box-shadow: none !important;
   }
-  .order-number { font-size: 68px; line-height: 1; margin: 0 0 6px; }
+  .order-number { font-size: 73px; line-height: 1; margin: 0 0 6px; }
   .order-summary {
     padding: 3px 0;
     margin: 0;
@@ -608,14 +608,14 @@ h1 {
     display: flex;
     justify-content: center;
     gap: 8px;
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1.12;
     padding: 0;
     border-bottom: none;
   }
   .summary-row span::after { content: ':'; }
   .summary-item-heading {
-    font-size: 16px;
+    font-size: 17px;
     line-height: 1.2;
     margin: 8px 0 2px;
   }
@@ -636,15 +636,15 @@ h1 {
   }
   .print-qr {
     display: block;
-    width: 135px;
-    height: 135px;
-    margin: 8px auto 0;
+    width: 137px;
+    height: 137px;
+    margin: 7px auto 0;
   }
   .print-qr-caption {
     display: block;
     font-size: 14px;
     text-align: center;
-    margin-top: 6px;
+    margin-top: 5px;
   }
 
   /* Multi-item orders add several rows per extra item, which a fixed 4x6
