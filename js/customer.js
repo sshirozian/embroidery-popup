@@ -16,23 +16,20 @@ const PAYMENT_METHODS = [
   { id: 'check', label: 'Check', icon: '🧾' },
 ];
 
-// Order matters: the first 6 render on row 1, the remaining 7 on row 2.
+// Order matters: the first 5 render on row 1, the remaining 5 on row 2.
 const THREAD_COLORS = [
   { id: 'red', label: 'Red', hex: '#c0392b' },
   { id: 'blue', label: 'Blue', hex: '#1f5fa8' },
   { id: 'orange', label: 'Orange', hex: '#d9731e' },
-  { id: 'gold', label: 'Gold', hex: '#c9a227' },
   { id: 'green', label: 'Green', hex: '#2f7d4f' },
-  { id: 'beige', label: 'Beige', hex: '#d8c3a5' },
-  { id: 'hot-pink', label: 'Hot Pink', hex: '#e6007e' },
+  { id: 'yellow', label: 'Yellow', hex: '#e8c93b' },
   { id: 'light-pink', label: 'Light Pink', hex: '#f4b6c2' },
-  { id: 'brown', label: 'Brown', hex: '#6f4e37' },
-  { id: 'maroon', label: 'Maroon', hex: '#800020' },
-  { id: 'copper', label: 'Copper', hex: '#b87333' },
-  { id: 'olive', label: 'Olive', hex: '#71772e' },
-  { id: 'brass', label: 'Brass', hex: '#b5a642' },
+  { id: 'hot-pink', label: 'Hot Pink', hex: '#e6007e' },
+  { id: 'light-blue', label: 'Light Blue', hex: '#7ec8e3' },
+  { id: 'navy-blue', label: 'Navy Blue', hex: '#1a2b4c' },
+  { id: 'purple', label: 'Purple', hex: '#8e44ad' },
 ];
-const THREAD_COLORS_ROW1_COUNT = 6;
+const THREAD_COLORS_ROW1_COUNT = 5;
 
 const ALL_STEP_IDS = ['step1', 'stepProduct', 'step2', 'step3', 'stepPayment', 'stepReview', 'stepDone', 'stepComplete'];
 
