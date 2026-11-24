@@ -182,10 +182,18 @@ function renderFields() {
 function renderProductOptions() {
   const grid = document.getElementById('productGrid');
   grid.innerHTML = '';
+  // Lock every card to the same explicit pixel size (computed from the grid's
+  // own width, which doesn't depend on its children) rather than relying on
+  // flex-basis percentages + CSS aspect-ratio, which can drift inconsistently
+  // across re-renders as items are added/removed.
+  const gridGap = 16;
+  const cardSize = Math.floor((grid.clientWidth - gridGap) / 2);
   config.productOptions.forEach((opt) => {
     const qty = cartQuantities[opt.id] || 0;
     const card = document.createElement('div');
     card.className = 'option-card qty-card' + (qty > 0 ? ' selected' : '');
+    card.style.flex = `0 0 ${cardSize}px`;
+    card.style.height = cardSize + 'px';
 
     if (opt.image) {
       const img = document.createElement('img');

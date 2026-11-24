@@ -217,7 +217,8 @@ h1 {
 }
 
 .qty-card {
-  aspect-ratio: 1 / 1;
+  /* Width and height are set explicitly in JS (renderProductOptions) for
+     deterministic, count-independent sizing — see the comment there. */
   display: flex;
   flex-direction: column;
 }
