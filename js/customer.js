@@ -195,6 +195,12 @@ function renderProductOptions() {
     card.className = 'option-card qty-card' + (qty > 0 ? ' selected' : '');
     card.style.flex = `0 0 ${cardSize}px`;
     card.style.height = cardSize + 'px';
+    // Tapping anywhere on the card adds one, same as tapping "+". The
+    // stepper buttons stop propagation below so they don't double-count.
+    card.addEventListener('click', () => {
+      cartQuantities[opt.id] = (cartQuantities[opt.id] || 0) + 1;
+      renderProductOptions();
+    });
 
     if (opt.image) {
       const img = document.createElement('img');
@@ -217,7 +223,8 @@ function renderProductOptions() {
     decBtn.type = 'button';
     decBtn.className = 'qty-btn';
     decBtn.textContent = '−';
-    decBtn.addEventListener('click', () => {
+    decBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       cartQuantities[opt.id] = Math.max(0, (cartQuantities[opt.id] || 0) - 1);
       renderProductOptions();
     });
@@ -228,7 +235,8 @@ function renderProductOptions() {
     incBtn.type = 'button';
     incBtn.className = 'qty-btn';
     incBtn.textContent = '+';
-    incBtn.addEventListener('click', () => {
+    incBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       cartQuantities[opt.id] = (cartQuantities[opt.id] || 0) + 1;
       renderProductOptions();
     });

@@ -205,7 +205,7 @@ function renderProductOptionsEditor() {
     fileInput.accept = 'image/*';
     fileInput.addEventListener('change', async () => {
       if (fileInput.files[0]) {
-        opt.image = await readFileAsDataURL(fileInput.files[0]);
+        opt.image = await resizeImageToSquare(fileInput.files[0], 600);
         renderProductOptionsEditor();
       }
     });

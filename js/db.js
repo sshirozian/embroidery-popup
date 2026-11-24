@@ -300,3 +300,32 @@ function readFileAsDataURL(file) {
     reader.readAsDataURL(file);
   });
 }
+
+// Crops/scales an uploaded image to a square (cover-fit, like the CSS
+// object-fit: cover used to display it) so item cards render consistently
+// regardless of the source photo's original aspect ratio.
+function resizeImageToSquare(file, size) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const scale = Math.max(size / img.width, size / img.height);
+        const scaledWidth = img.width * scale;
+        const scaledHeight = img.height * scale;
+        const offsetX = (size - scaledWidth) / 2;
+        const offsetY = (size - scaledHeight) / 2;
+        ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = reject;
+      img.src = reader.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
