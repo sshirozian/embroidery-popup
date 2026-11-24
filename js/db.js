@@ -301,11 +301,11 @@ function readFileAsDataURL(file) {
   });
 }
 
-// Crops/scales an image (from any src: a data URL, object URL, etc.) to a
-// square (cover-fit, like the CSS object-fit: cover used to display it) so
-// item cards render consistently regardless of the source photo's original
-// aspect ratio.
-function cropImageSrcToSquare(src, size) {
+// Scales an image (from any src: a data URL, object URL, etc.) down to fit
+// inside a square canvas (contain-fit) without cropping any of it, padding
+// the leftover space with white, so item cards render consistently
+// regardless of the source photo's original aspect ratio.
+function fitImageSrcToSquare(src, size) {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.onload = () => {
@@ -313,7 +313,9 @@ function cropImageSrcToSquare(src, size) {
       canvas.width = size;
       canvas.height = size;
       const ctx = canvas.getContext('2d');
-      const scale = Math.max(size / img.width, size / img.height);
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, size, size);
+      const scale = Math.min(size / img.width, size / img.height);
       const scaledWidth = img.width * scale;
       const scaledHeight = img.height * scale;
       const offsetX = (size - scaledWidth) / 2;
@@ -329,7 +331,7 @@ function cropImageSrcToSquare(src, size) {
 function resizeImageToSquare(file, size) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(cropImageSrcToSquare(reader.result, size));
+    reader.onload = () => resolve(fitImageSrcToSquare(reader.result, size));
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });

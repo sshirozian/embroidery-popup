@@ -285,15 +285,15 @@ function renderOptionsEditor() {
   });
 }
 
-// Item photos uploaded before square-cropping was added are stored in their
-// original, uncropped shape. Crop any of those the first time the admin
+// Item photos uploaded before square-fitting was added are stored in their
+// original, un-fitted shape. Fit any of those the first time the admin
 // panel loads after this update, then re-render and persist the result so
 // it only has to happen once per photo.
 async function cropExistingProductImages() {
   let changed = false;
   for (const opt of config.productOptions) {
     if (opt.image && !opt.imageCropped) {
-      opt.image = await cropImageSrcToSquare(opt.image, 600);
+      opt.image = await fitImageSrcToSquare(opt.image, 600);
       opt.imageCropped = true;
       changed = true;
     }
