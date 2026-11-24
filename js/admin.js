@@ -206,6 +206,7 @@ function renderProductOptionsEditor() {
     fileInput.addEventListener('change', async () => {
       if (fileInput.files[0]) {
         opt.image = await resizeImageToSquare(fileInput.files[0], 600);
+        opt.imageCropped = true;
         renderProductOptionsEditor();
       }
     });
@@ -284,12 +285,32 @@ function renderOptionsEditor() {
   });
 }
 
+// Item photos uploaded before square-cropping was added are stored in their
+// original, uncropped shape. Crop any of those the first time the admin
+// panel loads after this update, then re-render and persist the result so
+// it only has to happen once per photo.
+async function cropExistingProductImages() {
+  let changed = false;
+  for (const opt of config.productOptions) {
+    if (opt.image && !opt.imageCropped) {
+      opt.image = await cropImageSrcToSquare(opt.image, 600);
+      opt.imageCropped = true;
+      changed = true;
+    }
+  }
+  if (changed) {
+    await setConfig(config);
+    renderProductOptionsEditor();
+  }
+}
+
 function wireConfigActions() {
   renderLogoPreview();
   renderVenmoQrPreview();
   renderFieldsEditor();
   renderProductOptionsEditor();
   renderOptionsEditor();
+  cropExistingProductImages();
   document.getElementById('toggleCustomerInfo').checked = !!config.enabledSteps.customerInfo;
   document.getElementById('toggleItemOptions').checked = !!config.enabledSteps.itemOptions;
   document.getElementById('toggleFontStyle').checked = !!config.enabledSteps.fontStyle;
