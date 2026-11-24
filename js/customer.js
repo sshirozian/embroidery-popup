@@ -182,6 +182,10 @@ function renderFields() {
 
 function renderProductOptions() {
   const grid = document.getElementById('productGrid');
+  // Clearing innerHTML briefly shrinks the page's scroll height, which forces
+  // the browser to clamp the scroll position — remember it and restore it
+  // after rebuilding so tapping a card doesn't jump the page back to the top.
+  const scrollY = window.scrollY;
   grid.innerHTML = '';
   // Lock every card to the same explicit pixel size (computed from the grid's
   // own width, which doesn't depend on its children) rather than relying on
@@ -247,6 +251,7 @@ function renderProductOptions() {
 
     grid.appendChild(card);
   });
+  window.scrollTo(0, scrollY);
 }
 
 function renderOptions() {
