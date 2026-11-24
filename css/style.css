@@ -338,9 +338,16 @@ h1 {
 
 .color-row {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
   gap: 10px;
   margin-bottom: 10px;
+}
+
+.color-row-top {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.color-row-bottom {
+  grid-template-columns: repeat(6, 1fr);
 }
 
 .color-swatch {

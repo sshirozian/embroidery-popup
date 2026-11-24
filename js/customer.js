@@ -16,7 +16,7 @@ const PAYMENT_METHODS = [
   { id: 'check', label: 'Check', icon: '🧾' },
 ];
 
-// Order matters: the first 5 render on row 1, the remaining 5 on row 2.
+// Order matters: the first 5 render on row 1, the remaining 6 on row 2.
 const THREAD_COLORS = [
   { id: 'red', label: 'Red', hex: '#c0392b' },
   { id: 'blue', label: 'Blue', hex: '#1f5fa8' },
@@ -28,6 +28,7 @@ const THREAD_COLORS = [
   { id: 'light-blue', label: 'Light Blue', hex: '#7ec8e3' },
   { id: 'navy-blue', label: 'Navy Blue', hex: '#1a2b4c' },
   { id: 'purple', label: 'Purple', hex: '#8e44ad' },
+  { id: 'beige', label: 'Beige', hex: '#d8c3a5' },
 ];
 const THREAD_COLORS_ROW1_COUNT = 5;
 
